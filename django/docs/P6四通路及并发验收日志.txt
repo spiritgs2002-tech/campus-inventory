@@ -1,0 +1,38 @@
+文件: /Users/andy/Desktop/saas/inventory-v4/django/sql/schema-v7.sql
+行数: 757
+美元引号块: 15 个（其中 CREATE FUNCTION 形式 14 个）
+
+[OK] 美元引号成对且均以 ; 终止。仍需执行 G0 真实建库验证。
+Operations to perform:
+  Apply all migrations: attachments, catalog, core, inventory
+Running migrations:
+  Applying core.0001_initial...
+ OK
+  Applying core.0002_model_state...
+ OK
+  Applying catalog.0001_initial...
+ OK
+  Applying inventory.0001_initial...
+ OK
+  Applying attachments.0001_initial...
+ OK
+  Applying core.0003_runtime_access_guards...
+ OK
+G0 passed: 27 business tables / 14 functions / 32 triggers
+runtime ACL assertions passed; actual login memberships must also be checked
+REDIS: 7.2.17 disposable loopback instance
+STORAGE: real boto3 PUT/GET wire requests to private local S3 protocol fixture; digest readback verified
+ISOLATION 1/native SQL: cross-tenant and same-tenant unauthorized IDs excluded
+ISOLATION 2/Celery: separate real worker through Redis rejects foreign ID and forged tenant scope
+ISOLATION 3/bulk import: mixed-tenant CSV rolls back all rows; own-tenant import succeeds
+Not Found: /api/v1/attachments/2/download/
+ISOLATION 4/object download: foreign object rejected before access; authorized bytes and SHA match
+CONCURRENCY 1: duplicate uploads -> one metadata identity and one stored object
+CONCURRENCY 2: cross-actor same evidence -> exactly one association
+CONCURRENCY 3: evidence versus approval serialized; decided associations cannot change
+LIFECYCLE: withdrawal preserves original object and legal hold
+CELERY: revoked initiating family rejected at execution time
+O1/P5: reconcile command owned by apps.reconcile; 13/13 clean after P6 flows
+P6 runtime and four-path isolation verification passed
+S3 fixture: 6 immutable private objects; no external bucket used
+P6 temporary database/login, Redis, worker and object server cleaned

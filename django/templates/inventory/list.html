@@ -1,0 +1,13 @@
+<section><h1 class="h3">{{ label }}</h1>
+{% if resource == 'stock' %}<p>可用库存达到安全线时显示充足；损坏库存不参与可用量计算。</p>{% if principal.role == 'admin' %}<a href="/stock/ledger/">查看库存流水</a>{% endif %}{% endif %}
+<form class="card card-body my-3" method="get" hx-get="{{ request.path }}" hx-target="#workspace"><div class="order-grid">{{ filter_form.as_p }}</div><button class="btn btn-primary">查询</button></form>
+<p>共 {{ total }} 条</p><div class="table-responsive"><table class="table"><thead><tr>
+{% if resource == 'assets' %}<th>资产编号</th><th>物资</th><th>状态</th><th>库位</th>{% if principal.role == 'admin' %}<th>责任人</th>{% endif %}<th>详情</th>
+{% elif resource == 'ledger' %}<th>流水</th><th>物资</th><th>库位</th><th>质量</th><th>方向</th><th>数量</th><th>结余</th><th>操作者</th>
+{% else %}<th>物资</th><th>编码</th>{% if principal.role == 'admin' %}<th>库位</th><th>质量</th><th>数量</th><th>版本</th>{% endif %}<th>可用情况</th><th>安全库存</th>{% endif %}
+</tr></thead><tbody>{% for row in records %}<tr>
+{% if resource == 'assets' %}<td>{{ row.asset_no }}</td><td>{{ row.item_name }}</td><td>{{ row.status_label }}</td><td>{{ row.location_name }}</td>{% if principal.role == 'admin' %}<td>{{ row.responsible_name }}</td>{% endif %}<td><a href="/assets/{{ row.id }}/">查看</a></td>
+{% elif resource == 'ledger' %}<td>{{ row.id }}</td><td>{{ row.item_name }}</td><td>{{ row.location_name }}</td><td>{{ row.quality_label }}</td><td>{% if row.direction == 'in' %}增加{% else %}减少{% endif %}</td><td>{{ row.quantity }}</td><td>{{ row.balance_after }}</td><td>{{ row.operator_name }}</td>
+{% else %}<td>{{ row.item_name }}</td><td>{{ row.code }}</td>{% if principal.role == 'admin' %}<td>{{ row.location_name }}</td><td>{{ row.quality_label }}</td><td>{{ row.quantity }} {{ row.unit }}</td><td>{{ row.version }}</td>{% endif %}<td>{% if row.available %}有货{% else %}无可用库存{% endif %}</td><td>{% if row.low_stock %}不足{% else %}充足{% endif %}</td>{% endif %}
+</tr>{% empty %}<tr><td colspan="9">暂无符合条件的记录</td></tr>{% endfor %}</tbody></table></div>
+<nav>{% if previous_url %}<a href="{{ previous_url }}">上一页</a>{% endif %}<span class="mx-3">{{ page }} / {{ pages }}</span>{% if next_url %}<a href="{{ next_url }}">下一页</a>{% endif %}</nav></section>

@@ -1,0 +1,88 @@
+PostgreSQL 16.15 (Homebrew); isolated verification: inventory_p1_1c25d368be87
+文件: /Users/andy/Desktop/saas/inventory-v4/django/sql/schema-v7.sql
+行数: 757
+美元引号块: 15 个（其中 CREATE FUNCTION 形式 14 个）
+
+[OK] 美元引号成对且均以 ; 终止。仍需执行 G0 真实建库验证。
+Operations to perform:
+  Apply all migrations: attachments, catalog, core, inventory
+Running migrations:
+  Applying core.0001_initial...
+ OK
+  Applying core.0002_model_state...
+ OK
+  Applying catalog.0001_initial...
+ OK
+  Applying inventory.0001_initial...
+ OK
+  Applying attachments.0001_initial...
+ OK
+G0 passed: 27 business tables / 14 functions / 32 triggers
+runtime ACL assertions passed; actual login memberships must also be checked
+文件: /Users/andy/Desktop/saas/inventory-v4/django/sql/schema-v7.sql
+行数: 757
+美元引号块: 15 个（其中 CREATE FUNCTION 形式 14 个）
+
+[OK] 美元引号成对且均以 ; 终止。仍需执行 G0 真实建库验证。
+Operations to perform:
+  Apply all migrations: attachments, catalog, core, inventory
+Running migrations:
+  No migrations to apply.
+G0 passed: 27 business tables / 14 functions / 32 triggers
+runtime ACL assertions passed; actual login memberships must also be checked
+No changes detected
+SQL positive/negative assertions: 21/21 passed
+Actual runtime login: read allowed; 4 forbidden operations rejected
+Unrecorded baseline: adoption refused, business rows unchanged
+Injected pre-COMMIT failure: 0 residual tables / 0 residual functions
+Creating test database for alias 'default' ('test_inventory_p1_1c25d368be87')...
+Found 18 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: csp, reconcile, staticfiles
+  Apply all migrations: attachments, catalog, core, inventory
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying core.0001_initial... OK
+  Applying core.0002_model_state... OK
+  Applying catalog.0001_initial... OK
+  Applying inventory.0001_initial... OK
+  Applying attachments.0001_initial...test_composite_primary_key_read_write (tests.test_models.BaselineDatabaseTests.test_composite_primary_key_read_write) ... ok
+test_cross_tenant_composite_foreign_key_is_rejected (tests.test_models.BaselineDatabaseTests.test_cross_tenant_composite_foreign_key_is_rejected) ... ok
+test_defaults_trigger_xid_and_composite_joins (tests.test_models.BaselineDatabaseTests.test_defaults_trigger_xid_and_composite_joins) ... ok
+test_every_column_and_foreign_key_matches_postgresql (tests.test_models.BaselineDatabaseTests.test_every_column_and_foreign_key_matches_postgresql) ... ok
+test_g0_and_runtime_commands (tests.test_models.BaselineDatabaseTests.test_g0_and_runtime_commands) ... ok
+test_generated_columns_and_trigger_stamped_inbound_roundtrip (tests.test_models.BaselineDatabaseTests.test_generated_columns_and_trigger_stamped_inbound_roundtrip) ... ok
+test_inventory_version_is_database_managed (tests.test_models.BaselineDatabaseTests.test_inventory_version_is_database_managed) ... ok
+test_runtime_effective_permissions_and_migration_journal_protection (tests.test_models.BaselineDatabaseTests.test_runtime_effective_permissions_and_migration_journal_protection) ... ok
+test_all_models_are_unmanaged_and_composite_keys_have_no_fake_id (tests.test_models.ModelContractTests.test_all_models_are_unmanaged_and_composite_keys_have_no_fake_id) ... ok
+test_packaged_schema_matches_authoritative_source_when_present (tests.test_models.ModelContractTests.test_packaged_schema_matches_authoritative_source_when_present) ... ok
+test_home (tests.test_scaffold.ScaffoldTests.test_home) ... ok
+test_liveness_and_csp (tests.test_scaffold.ScaffoldTests.test_liveness_and_csp) ... ok
+test_no_write_surface (tests.test_scaffold.ScaffoldTests.test_no_write_surface) ... ok
+test_precheck_baseline (tests.test_scaffold.ScaffoldTests.test_precheck_baseline) ... ok
+test_precheck_rejects_broken_sql (tests.test_scaffold.ScaffoldTests.test_precheck_rejects_broken_sql) ... ok
+test_baseline_cannot_be_destructively_reversed (tests.test_sql_operation.SQLFileOperationTests.test_baseline_cannot_be_destructively_reversed) ... ok
+test_changed_artifact_is_rejected_before_execution (tests.test_sql_operation.SQLFileOperationTests.test_changed_artifact_is_rejected_before_execution) ... ok
+test_whole_file_is_sent_as_one_statement_without_rewriting (tests.test_sql_operation.SQLFileOperationTests.test_whole_file_is_sent_as_one_statement_without_rewriting) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.058s
+
+OK
+Destroying test database for alias 'default' ('test_inventory_p1_1c25d368be87')...
+ OK
+System check identified no issues (0 silenced).
+文件: /Users/andy/Desktop/saas/inventory-v4/django/sql/schema-v7.sql
+行数: 757
+美元引号块: 15 个（其中 CREATE FUNCTION 形式 14 个）
+
+[OK] 美元引号成对且均以 ; 终止。仍需执行 G0 真实建库验证。
+文件: /var/folders/xn/ff3ym8f5357cwxv0qdf4x3jm0000gn/T/tmpf905v4at/broken.sql
+行数: 2
+美元引号块: 0 个（其中 CREATE FUNCTION 形式 0 个）
+
+[FAIL] 发现缺陷：
+  - 第 1 行：函数开引号写成单个 $（应为 AS $$）: CREATE FUNCTION broken() RETURNS void AS $
+P1 verification passed

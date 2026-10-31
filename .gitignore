@@ -1,0 +1,25 @@
+# ---------- Python 依赖 / 缓存（体积大，绝不提交）----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# ---------- 密钥 / 本地环境（真实 .env 切勿提交）----------
+.env
+.env.*
+!.env.example
+
+# ---------- Django 运行时生成物 ----------
+*.log
+db.sqlite3
+staticfiles/
+media/
+uploads/
+
+# ---------- 操作系统 / 编辑器 ----------
+.DS_Store
+.idea/
+.vscode/

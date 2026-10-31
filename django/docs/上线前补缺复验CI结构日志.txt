@@ -1,0 +1,5 @@
+Locate application: . passed
+Locate application: django passed
+Locate application: inventory-v4/django passed
+Locate application: missing layout rejected
+Root YAML, all shell/Python blocks, DB isolation and early delivery guard passed

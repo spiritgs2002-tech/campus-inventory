@@ -1,0 +1,25 @@
+COMMAND: /opt/anaconda3/bin/ruff check apps shared campus_inventory tests scripts --output-format concise
+All checks passed!
+COMMAND: /Users/andy/Desktop/saas/inventory-v4/django/.venv/bin/python manage.py check
+System check identified no issues (0 silenced).
+COMMAND: /Users/andy/Desktop/saas/inventory-v4/django/.venv/bin/python manage.py precheck_sql
+文件: /Users/andy/Desktop/saas/inventory-v4/django/sql/schema-v7.sql
+行数: 757
+美元引号块: 15 个（其中 CREATE FUNCTION 形式 14 个）
+
+[OK] 美元引号成对且均以 ; 终止。仍需执行 G0 真实建库验证。
+COMMAND: /Users/andy/Desktop/saas/inventory-v4/django/.venv/bin/python manage.py verify_config_examples
+{"database_name": "campus_inventory", "host_key_codepoints": [68, 66, 95, 72, 79, 83, 84], "host_key_hex": "44425f484f5354", "legacy_key_present": false, "socket_override_readback": true}
+Configuration example assertions passed; no database connection made
+System check identified no issues (0 silenced).
+DEBUG=false health/live HTTP status: 301
+UNCHANGED_SHA256 requirements.txt 134059fb68e7c7bcd923af49b5dae15a214634be377f4ed8fea201313f59eda8
+UNCHANGED_SHA256 uv.lock cbcb127e4e02f9b288773be2129c42e6d331a34b2957bbdde674457184782fd4
+SHA256 schema-v7.sql 2cc1062a3386ed9815fce2fbb60b05df8d3b5827d70fec9a586b5543ac367f82
+SHA256 grant-runtime.sql c730bee0d8fba92e64e931779c1e6f7861f8478b021b4f9c0138a7e1762f9ccf
+SHA256 verify-runtime.sql c9009606675739e7c3393b9a176bf7e67518644004f5c35543ad5a458d9191d2
+SHA256 reconcile-v2.sql e4811e039ff8300ed9d20825e3f9f242494f806bf5ff0996667e28661baf05f5
+Control workflow snapshot preserved exactly: d92c1e6c428fca599ab843cd70e0d1a94a30ad7dc2533cf7d26ec6e4f2335a1a
+Original acceptance report SHA256: 8fc628e25e02f00a3ff7980cfbe82480c8b72108101ea90151e67f5087e2e945
+Final root workflow YAML/shell/Python, G0/M1, B6, B9 and early delivery guard passed
+All current static/configuration/artifact checks passed

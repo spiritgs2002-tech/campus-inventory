@@ -1,0 +1,18 @@
+[Unit]
+Description=校园总务库存系统 · Celery Beat (调度)
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=simple
+User=inventory
+Group=inventory
+WorkingDirectory=/opt/campus-inventory/django
+EnvironmentFile=/etc/campus-inventory/env
+# 仅一个 beat 实例；--schedule 指向可写持久路径
+ExecStart=/opt/campus-inventory/django/.venv/bin/celery -A campus_inventory beat \
+    --loglevel=INFO --schedule /var/lib/campus-inventory/beat.db
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

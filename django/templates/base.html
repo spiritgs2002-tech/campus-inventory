@@ -1,0 +1,14 @@
+{% load static %}<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="htmx-config" content='{"allowEval":false,"allowScriptTags":false,"includeIndicatorStyles":false}'>
+<title>{% block title %}校园总务 · 库存管理{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}"><link rel="stylesheet" href="{% static 'app.css' %}">
+<script defer src="{% static 'vendor/htmx.min.js' %}"></script><script defer src="{% static 'vendor/alpine-csp.min.js' %}"></script><script defer src="{% static 'app.js' %}"></script>
+</head><body><header class="border-bottom bg-white"><nav class="navbar container"><a class="navbar-brand" href="/catalog/items/">校园总务</a>
+<div class="d-flex gap-3 flex-wrap"><a href="/catalog/items/">物资</a><a href="/catalog/categories/">分类</a><a href="/catalog/locations/">库位</a><a href="/catalog/suppliers/">供应商</a>
+<a href="/outbound/">领用</a><a href="/scrap/">处置</a>{% if principal.role == 'admin' %}<a href="/inbound/">入库</a><a href="/adjustment/">调整</a>{% endif %}
+<a href="/stock/">库存</a><a href="/assets/">资产</a>
+<a href="/attachments/">附件</a>
+{% if principal.role == 'admin' %}<a href="/manage/departments/">部门</a><a href="/manage/users/">用户</a><a href="/manage/tenant/">学校设置</a>{% endif %}<a href="/auth/change-password/">修改密码</a>
+{% if principal %}<form method="post" action="/auth/logout/">{% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}"><button class="btn btn-sm btn-outline-secondary">退出登录</button></form>{% endif %}</div>
+</nav></header><main class="container py-4" id="workspace">{% block content %}{% endblock %}</main></body></html>

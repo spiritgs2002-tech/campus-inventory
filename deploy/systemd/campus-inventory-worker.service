@@ -1,0 +1,17 @@
+[Unit]
+Description=校园总务库存系统 · Celery Worker
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=simple
+User=inventory
+Group=inventory
+WorkingDirectory=/opt/campus-inventory/django
+EnvironmentFile=/etc/campus-inventory/env
+ExecStart=/opt/campus-inventory/django/.venv/bin/celery -A campus_inventory worker \
+    --loglevel=INFO --concurrency=2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

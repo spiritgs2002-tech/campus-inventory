@@ -1,0 +1,19 @@
+[Unit]
+Description=校园总务库存系统 · Web (gunicorn)
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=notify
+User=inventory
+Group=inventory
+WorkingDirectory=/opt/campus-inventory/django
+EnvironmentFile=/etc/campus-inventory/env
+# collectstatic 在首次部署/静态变更后手动执行；此处仅启动 gunicorn
+ExecStart=/opt/campus-inventory/django/.venv/bin/gunicorn campus_inventory.wsgi:application \
+    --bind 127.0.0.1:8000 --workers 3 --timeout 60 --access-logfile -
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

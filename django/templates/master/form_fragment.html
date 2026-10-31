@@ -1,0 +1,5 @@
+<section class="card"><div class="card-body p-4"><h1 class="h4 mb-4">{% if object %}编辑{% else %}新增{% endif %}{{ label }}</h1>
+<form method="post" action="{{ request.path }}" hx-post="{{ request.path }}" hx-target="#workspace">
+{% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">{{ form.as_p }}
+<button class="btn btn-primary">保存</button><a class="btn btn-light" href="{% if resource == 'departments' or resource == 'users' or resource == 'tenant' %}/manage/{% else %}/catalog/{% endif %}{{ resource }}/">返回</a>
+</form></div></section>

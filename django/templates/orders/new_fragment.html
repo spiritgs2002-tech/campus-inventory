@@ -1,0 +1,8 @@
+<section><h1 class="h3 mb-3">新建{{ label }}单</h1><nav class="d-flex gap-3 mb-3">{% for value,text in types %}<a href="{{ base_url }}new/?type={{ value }}">{{ text }}</a>{% endfor %}</nav>
+<p class="text-secondary">确认后一次成单。入库、采购退货与转移即时执行；其他申请提交后等待管理员处理。</p>
+<form method="post" action="{{ base_url }}new/" hx-post="{{ base_url }}new/" hx-target="#workspace" data-order-form data-order-type="{{ selected_type }}">{% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+<div class="card card-body mb-3">{{ header_form.as_p }}</div>{{ formset.management_form }}{{ formset.non_form_errors }}
+<div data-order-lines>{% for form in formset %}<fieldset class="card card-body mb-3"><legend class="h5">明细 {{ forloop.counter }}</legend>{% if kind == 'adjustment' %}<button class="btn btn-outline-secondary mb-3" type="button" data-observe-stock>观察当前账面</button><p data-observe-message role="status"></p>{% endif %}<div class="order-grid">{{ form.as_p }}</div></fieldset>{% endfor %}</div>
+<template data-empty-order-line><fieldset class="card card-body mb-3"><legend class="h5">新增明细</legend>{% if kind == 'adjustment' %}<button class="btn btn-outline-secondary mb-3" type="button" data-observe-stock>观察当前账面</button><p data-observe-message role="status"></p>{% endif %}<div class="order-grid">{{ empty_form.as_p }}</div></fieldset></template>
+<button type="button" class="btn btn-outline-secondary" data-add-order-line>增加明细</button><button class="btn btn-primary">确认提交</button><a class="btn btn-light" href="{{ base_url }}">返回</a></form>
+{% if kind == 'adjustment' %}<p class="text-secondary mt-3">请先观察库位与质量维度的账面数量及版本，再填写实盘差额；审批时会复核观察快照。</p>{% endif %}</section>

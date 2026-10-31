@@ -1,0 +1,9 @@
+<section><div class="d-flex justify-content-between align-items-center mb-3"><div><h1 class="h3">{{ label }}管理</h1><p class="text-secondary">共 {{ page.paginator.count }} 条记录</p></div>
+{% if principal.role == 'admin' %}<a href="{{ base_url }}new/" hx-get="{{ base_url }}new/" hx-target="#workspace" class="btn btn-primary">新增{{ label }}</a>{% endif %}</div>
+<form method="get" action="{{ base_url }}" hx-get="{{ base_url }}" hx-target="#workspace" class="d-flex gap-2 mb-4"><label for="search" class="visually-hidden">按名称查询</label><input class="form-control" id="search" name="q" value="{{ request.GET.q }}" maxlength="120" placeholder="按名称查询"><button class="btn btn-outline-primary">查询</button></form>
+<div class="table-responsive"><table class="table table-hover bg-white"><thead><tr><th>编号</th><th>名称</th><th>编码/用户名</th><th>类型/角色</th><th>状态</th><th>操作</th></tr></thead><tbody>
+{% for row in records %}<tr><td>{{ row.id }}</td><td>{{ row.name }}</td><td>{% firstof row.code row.username '—' %}</td><td>{% firstof row.type row.role '—' %}</td><td>{% if row.active %}启用{% else %}停用{% endif %}</td><td>
+{% if principal.role == 'admin' %}<a href="{{ base_url }}{{ row.id }}/edit/" hx-get="{{ base_url }}{{ row.id }}/edit/" hx-target="#workspace">编辑</a>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="6" class="text-center text-secondary py-4">暂无记录</td></tr>{% endfor %}</tbody></table></div>
+<nav aria-label="分页">{% if page.has_previous %}<a href="?page={{ page.previous_page_number }}&amp;q={{ request.GET.q|urlencode }}" hx-get="?page={{ page.previous_page_number }}&amp;q={{ request.GET.q|urlencode }}" hx-target="#workspace">上一页</a>{% endif %}
+<span class="mx-3">{{ page.number }} / {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?page={{ page.next_page_number }}&amp;q={{ request.GET.q|urlencode }}" hx-get="?page={{ page.next_page_number }}&amp;q={{ request.GET.q|urlencode }}" hx-target="#workspace">下一页</a>{% endif %}</nav></section>

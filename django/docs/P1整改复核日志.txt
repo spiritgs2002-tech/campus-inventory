@@ -1,0 +1,51 @@
+O2: exact requested DB_HOST comment/value present; no DB_DNKO; no duplicate keys
+O3: application example DB_NAME=campus_inventory
+Settings readback (no database access): {"HOST": "localhost", "NAME": "campus_inventory", "PORT": "5432"}
+Settings readback (no database access): {"HOST": "/tmp", "NAME": "campus_inventory", "PORT": "5432"}
+O4 byte equality: schema-v7.sql SHA-256 2cc1062a3386ed9815fce2fbb60b05df8d3b5827d70fec9a586b5543ac367f82
+O4 byte equality: grant-runtime.sql SHA-256 c730bee0d8fba92e64e931779c1e6f7861f8478b021b4f9c0138a7e1762f9ccf
+O4 byte equality: verify-runtime.sql SHA-256 c9009606675739e7c3393b9a176bf7e67518644004f5c35543ad5a458d9191d2
+O4 byte equality: precheck-sql.py SHA-256 169f0815e3450451aa811b092e0d6216a8da346082d06e0e4aa8dec248e6548d
+O4 byte equality: test-negative.sql SHA-256 67f2fa3fa54b779c52473a6039f3144a82be1437920b05172b093c23cd4b1c6e
+COMMAND: manage.py check
+System check identified no issues (0 silenced).
+EXIT CODE: 0
+COMMAND: manage.py precheck_sql
+文件: /Users/andy/Desktop/saas/inventory-v4/django/sql/schema-v7.sql
+行数: 757
+美元引号块: 15 个（其中 CREATE FUNCTION 形式 14 个）
+
+[OK] 美元引号成对且均以 ; 终止。仍需执行 G0 真实建库验证。
+EXIT CODE: 0
+COMMAND: manage.py test tests.test_scaffold tests.test_sql_operation tests.test_models.ModelContractTests -v 2
+test_home (tests.test_scaffold.ScaffoldTests.test_home) ... ok
+test_liveness_and_csp (tests.test_scaffold.ScaffoldTests.test_liveness_and_csp) ... ok
+test_no_write_surface (tests.test_scaffold.ScaffoldTests.test_no_write_surface) ... ok
+test_precheck_baseline (tests.test_scaffold.ScaffoldTests.test_precheck_baseline) ... ok
+test_precheck_rejects_broken_sql (tests.test_scaffold.ScaffoldTests.test_precheck_rejects_broken_sql) ... ok
+test_baseline_cannot_be_destructively_reversed (tests.test_sql_operation.SQLFileOperationTests.test_baseline_cannot_be_destructively_reversed) ... ok
+test_changed_artifact_is_rejected_before_execution (tests.test_sql_operation.SQLFileOperationTests.test_changed_artifact_is_rejected_before_execution) ... ok
+test_whole_file_is_sent_as_one_statement_without_rewriting (tests.test_sql_operation.SQLFileOperationTests.test_whole_file_is_sent_as_one_statement_without_rewriting) ... ok
+test_all_models_are_unmanaged_and_composite_keys_have_no_fake_id (tests.test_models.ModelContractTests.test_all_models_are_unmanaged_and_composite_keys_have_no_fake_id) ... ok
+test_packaged_schema_matches_authoritative_source_when_present (tests.test_models.ModelContractTests.test_packaged_schema_matches_authoritative_source_when_present) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.034s
+
+OK
+Found 10 test(s).
+Skipping setup of unused database(s): default.
+System check identified no issues (0 silenced).
+文件: /Users/andy/Desktop/saas/inventory-v4/django/sql/schema-v7.sql
+行数: 757
+美元引号块: 15 个（其中 CREATE FUNCTION 形式 14 个）
+
+[OK] 美元引号成对且均以 ; 终止。仍需执行 G0 真实建库验证。
+文件: /var/folders/xn/ff3ym8f5357cwxv0qdf4x3jm0000gn/T/tmp4bzyn6rg/broken.sql
+行数: 2
+美元引号块: 0 个（其中 CREATE FUNCTION 形式 0 个）
+
+[FAIL] 发现缺陷：
+  - 第 1 行：函数开引号写成单个 $（应为 AS $$）: CREATE FUNCTION broken() RETURNS void AS $
+EXIT CODE: 0
+P1 rectification checks passed; no SQL migration or live database operation performed

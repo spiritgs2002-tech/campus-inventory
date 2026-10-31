@@ -1,0 +1,2 @@
+<section class="card card-body"><h1 class="h4">{{ record.asset_no }} · {% if action == 'repair_start' %}开始维修{% else %}维修完成{% endif %}</h1><p>{{ record.item_name }} · 当前状态：{{ record.status_label }}</p>
+<form method="post">{% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">{{ form.as_p }}<button class="btn btn-primary">确认</button><a class="btn btn-light" href="/assets/{{ record.id }}/">返回</a></form></section>

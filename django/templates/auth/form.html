@@ -1,0 +1,4 @@
+{% extends 'base.html' %}{% block content %}<section class="card auth-card mx-auto"><div class="card-body p-4">
+<h1 class="h4 mb-4">{% if action == 'login' %}登录校园总务{% else %}修改密码{% endif %}</h1>
+<form method="post">{% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">{{ form.as_p }}<button class="btn btn-primary">提交</button></form>
+</div></section>{% endblock %}

@@ -1,0 +1,33 @@
+文件: /Users/andy/Desktop/saas/inventory-v4/django/sql/schema-v7.sql
+行数: 757
+美元引号块: 15 个（其中 CREATE FUNCTION 形式 14 个）
+
+[OK] 美元引号成对且均以 ; 终止。仍需执行 G0 真实建库验证。
+Operations to perform:
+  Apply all migrations: attachments, catalog, core, inventory
+Running migrations:
+  Applying core.0001_initial...
+ OK
+  Applying core.0002_model_state...
+ OK
+  Applying catalog.0001_initial...
+ OK
+  Applying inventory.0001_initial...
+ OK
+  Applying attachments.0001_initial...
+ OK
+  Applying core.0003_runtime_access_guards...
+ OK
+G0 passed: 27 business tables / 14 functions / 32 triggers
+runtime ACL assertions passed; actual login memberships must also be checked
+REDIS: 7.2.17 disposable loopback instance
+{"timestamp": "2026-10-31T10:37:55.925182+00:00", "level": "INFO", "logger": "botocore.credentials", "message": "Found credentials in environment variables."}
+SESSIONS: whole family >30 days removed; active successor, revoked-future, recent expiry and foreign tenant retained; replay no-op; actual runtime CLI alias/replay/negative exits passed
+RESPONSES: 90-day response cleared; identity, digest, refs and completion timestamp retained
+EVIDENCE: actual S3 HEAD/conditional DELETE; injected 503 preserves committed tombstone across connections, same-key retry completes once; metadata/link retained; hold/future/foreign protected
+ORPHANS: tenant-only paged listing; >24h unregistered objects deleted; transient failure retried; young object and registration-after-plan preserved
+CONCURRENCY: two ordinary LOGIN connections clean one family once; cleanup versus legal hold serializes to held/present or tombstoned/deleted
+CELERY: real Redis/worker executed duplicate task ID, one audited mutation; reconcile 13/13 clean
+BEAT: real scheduler dispatched sessions/responses/evidence/orphans/reconcile; stop ceased dispatch; persistent restart succeeded; registered metadata retained
+P7 runtime, retry, race, pagination and beat lifecycle verification passed
+P7 temporary database/login, Redis, worker, beat and object server cleaned

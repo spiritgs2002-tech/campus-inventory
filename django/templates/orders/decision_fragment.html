@@ -1,0 +1,3 @@
+<section class="card card-body"><h1 class="h4">处理{{ label }}单 {{ document.order_no }}</h1><form method="post">{% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">{{ form.as_p }}
+{% if execution %}{{ execution.management_form }}{{ execution.non_form_errors }}{% for row in execution %}<fieldset class="card card-body mb-3"><legend class="h5">实发明细 {{ forloop.counter }} · {{ row.item_label }}</legend><p>申请数量：{{ row.requested_qty }}</p><div class="order-grid">{{ row.as_p }}</div></fieldset>{% endfor %}{% endif %}
+<button class="btn btn-primary">确认处理</button><a class="btn btn-light" href="{{ base_url }}{{ document.id }}/">返回</a></form></section>

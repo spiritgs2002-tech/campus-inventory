@@ -1,0 +1,31 @@
+文件: /Users/andy/Desktop/saas/inventory-v4/django/sql/schema-v7.sql
+行数: 757
+美元引号块: 15 个（其中 CREATE FUNCTION 形式 14 个）
+
+[OK] 美元引号成对且均以 ; 终止。仍需执行 G0 真实建库验证。
+Operations to perform:
+  Apply all migrations: attachments, catalog, core, inventory
+Running migrations:
+  Applying core.0001_initial...
+ OK
+  Applying core.0002_model_state...
+ OK
+  Applying catalog.0001_initial...
+ OK
+  Applying inventory.0001_initial...
+ OK
+  Applying attachments.0001_initial...
+ OK
+  Applying core.0003_runtime_access_guards...
+ OK
+G0 passed: 27 business tables / 14 functions / 32 triggers
+runtime ACL assertions passed; actual login memberships must also be checked
+IDENTITY: ordinary LOGIN; not owner/superuser, no CREATEDB/CREATEROLE/BYPASSRLS
+CONCURRENCY 1: same key -> one submitted order and identical response
+CONCURRENCY 2: two executors -> one completion, one FROZEN_DOCUMENT, one ledger
+CONCURRENCY 3: competing orders -> no oversell, failed order remains pending
+CONCURRENCY 4: cumulative return quota -> exactly one accepted
+CONCURRENCY 5: identical observations -> one approval, one STALE_SNAPSHOT
+CONCURRENCY 6: immutable purchase source quota -> exactly one accepted without UPDATE grant
+P4: all six concurrency cases passed; no incomplete operation placeholders
+P4 disposable database and login cleaned

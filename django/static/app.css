@@ -1,0 +1,12 @@
+body { background: #f5f7fb; color: #253044; }
+a { color: #245bb0; text-underline-offset: .2em; }
+.auth-card { max-width: 32rem; }
+form p { display: flex; flex-direction: column; gap: .4rem; max-width: 42rem; margin-bottom: 1rem; }
+input:not([type=checkbox]):not([type=hidden]), select { padding: .5rem .75rem; border: 1px solid #c5cede; border-radius: .35rem; }
+.errorlist { color: #b42318; }
+.htmx-request { opacity: .7; }
+.table { min-width: 680px; }
+.table th, .btn { white-space: nowrap; }
+.table td:nth-child(2) { min-width: 180px; }
+.order-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+.order-grid p { max-width: 100%; }

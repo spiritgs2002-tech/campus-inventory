@@ -1,0 +1,4 @@
+<section><div class="d-flex justify-content-between mb-3"><h1 class="h3">{{ label }}单据</h1><a class="btn btn-primary" href="{{ base_url }}new/">新建{{ label }}单</a></div>
+<p class="text-secondary">提交后的申请内容冻结；需更正时取消后复制新申请。</p><div class="table-responsive"><table class="table"><thead><tr><th>单号</th><th>业务</th><th>状态</th><th>创建时间</th><th>查看</th></tr></thead><tbody>
+{% for row in records %}<tr><td>{{ row.order_no }}</td><td>{{ row.type_label }}</td><td>{{ row.status_label }}</td><td>{{ row.created_at }}</td><td><a href="{{ base_url }}{{ row.id }}/">详情</a></td></tr>{% empty %}<tr><td colspan="5">暂无单据</td></tr>{% endfor %}</tbody></table></div>
+<nav>{% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">上一页</a>{% endif %}<span class="mx-3">{{ page.number }} / {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?page={{ page.next_page_number }}">下一页</a>{% endif %}</nav></section>
