@@ -23,8 +23,8 @@ class Command(BaseCommand):
             )
             triggers = cursor.fetchone()[0]
         counts = (tables, functions, triggers)
-        if counts != (27, 14, 32):
+        if counts != (30, 14, 32):
             raise CommandError(
-                f"G0 mismatch: tables/functions/triggers={counts}, expected (27, 14, 32)"
+                f"G0 mismatch: tables/functions/triggers={counts}, expected (30, 14, 32)"
             )
-        self.stdout.write("G0 passed: 27 business tables / 14 functions / 32 triggers")
+        self.stdout.write("G0 passed: 30 business tables / 14 functions / 32 triggers")

@@ -561,7 +561,7 @@ class AuthMasterDataTests(TestCase):
     def test_runtime_can_read_migration_status_but_not_provision_tenants(self):
         with connection.cursor() as cursor:
             cursor.execute("SELECT count(*) FROM django_migrations")
-            self.assertEqual(cursor.fetchone()[0], 6)
+            self.assertEqual(cursor.fetchone()[0], 10)
         with self.assertRaises(CommandError):
             call_command(
                 "provision_tenant",

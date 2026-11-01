@@ -14,6 +14,9 @@ PHASES = (
     "verify_p5",
     "verify_p6",
     "verify_p7",
+    "verify_p8a",
+    "verify_p8b",
+    "verify_p8c",
     "verify_readiness",
 )
 
@@ -52,6 +55,8 @@ def inspect_delivery(repo_root):
         raise ValueError(
             "CI_TEST_SUITE_MISSING: explicit Django regression step required"
         )
+    if "scripts/sync_schema_snapshot.py\" --check" not in body:
+        raise ValueError("CI_SCHEMA_GUARD_MISSING: SQL fingerprint check required")
     return {
         "repository_root": str(repo_root),
         "application_root": str(app),
@@ -62,6 +67,7 @@ def inspect_delivery(repo_root):
         "git_checkout_present": (repo_root / ".git").exists(),
         "phase_scripts": list(PHASES),
         "explicit_test_suite": True,
+        "sql_snapshot_guard": True,
         "remote_actions_verified": False,
     }
 

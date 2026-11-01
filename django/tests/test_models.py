@@ -38,7 +38,8 @@ class ModelContractTests(SimpleTestCase):
         source = settings.BASE_DIR.parent / "schema-v7.sql"
         if source.exists():
             self.assertEqual(
-                source.read_bytes(), (settings.SQL_ROOT / "schema-v7.sql").read_bytes()
+                source.read_bytes(),
+                (settings.SQL_ROOT / "schema-v7-current.sql").read_bytes(),
             )
         for name in (
             "grant-runtime.sql",

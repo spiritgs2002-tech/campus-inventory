@@ -1,0 +1,132 @@
+{
+  "归档日期": "2026-11-01",
+  "说明": "历史验收制品保留原字节；报告和操作说明仅修正归档后的链接。",
+  "文件": [
+    {
+      "原路径": "django/docs/P8aCI交付清单.json",
+      "归档路径": "docs/过程记录/P8a/P8aCI交付清单.json",
+      "归档时SHA256": "e34c07c20f4ba89e6ce2ab40cb1c487921178dafd72e37c860bc39effe1543fa",
+      "当前SHA256": "e34c07c20f4ba89e6ce2ab40cb1c487921178dafd72e37c860bc39effe1543fa",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a二维码解码验收日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a二维码解码验收日志.txt",
+      "归档时SHA256": "5ac69d1a82ef8f8c6fe516e3d57d371d150a220f54510b28a51a317bdab9b053",
+      "当前SHA256": "5ac69d1a82ef8f8c6fe516e3d57d371d150a220f54510b28a51a317bdab9b053",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a依赖安装验收日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a依赖安装验收日志.txt",
+      "归档时SHA256": "ddfa9c5bfbe1fb032442b9ca9920883c2ad1cd28e7a41801d1bc545cb11a6d28",
+      "当前SHA256": "ddfa9c5bfbe1fb032442b9ca9920883c2ad1cd28e7a41801d1bc545cb11a6d28",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a依赖更新日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a依赖更新日志.txt",
+      "归档时SHA256": "fc2c83e701eb3536002a1c30496159a953c9a5038d5e6c5ec5a006117635f882",
+      "当前SHA256": "fc2c83e701eb3536002a1c30496159a953c9a5038d5e6c5ec5a006117635f882",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a全量验收日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a全量验收日志.txt",
+      "归档时SHA256": "8be34bb8a84c9c652b956feeba2f4942d16e031d9d5718ec7ac965befcab5fd1",
+      "当前SHA256": "8be34bb8a84c9c652b956feeba2f4942d16e031d9d5718ec7ac965befcab5fd1",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a升级及并发验收日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a升级及并发验收日志.txt",
+      "归档时SHA256": "e175e03a0f0e6128ab99733759ba4a19c1bde7e0fcedd88180a7881e61245cb2",
+      "当前SHA256": "e175e03a0f0e6128ab99733759ba4a19c1bde7e0fcedd88180a7881e61245cb2",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a单据回归日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a单据回归日志.txt",
+      "归档时SHA256": "aac4712a6618a53c85864c57ef7aef6cae42b3c3f24f448b9cc8ee0736795278",
+      "当前SHA256": "aac4712a6618a53c85864c57ef7aef6cae42b3c3f24f448b9cc8ee0736795278",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a对账结果.json",
+      "归档路径": "docs/过程记录/P8a/P8a对账结果.json",
+      "归档时SHA256": "421440c8c40f31e67f17cfd7a8d428b79491ca10741713ee37c75c08c4d2233c",
+      "当前SHA256": "421440c8c40f31e67f17cfd7a8d428b79491ca10741713ee37c75c08c4d2233c",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a就绪探针回归日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a就绪探针回归日志.txt",
+      "归档时SHA256": "aeb18d5bc0285c91eded14061c6af42749dd1b2b0bb3fbdc10196e986b2c7df6",
+      "当前SHA256": "aeb18d5bc0285c91eded14061c6af42749dd1b2b0bb3fbdc10196e986b2c7df6",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a库存对账回归日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a库存对账回归日志.txt",
+      "归档时SHA256": "c1a9b28ca271d79832b134eb77f391969a9bbec226e4530bd05e3ebc0928f830",
+      "当前SHA256": "c1a9b28ca271d79832b134eb77f391969a9bbec226e4530bd05e3ebc0928f830",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a操作与复验说明.md",
+      "归档路径": "docs/使用说明/P8a操作与复验说明.md",
+      "归档时SHA256": "60e658f3671767e6d7f6a923a3949126606879f0ef6a789ad41abb6fe7de6605",
+      "当前SHA256": "8dae3ec224b641d8e0e6823a6fa137cedbe2890e95c3e0cb1f2a43b0c6dc80a1",
+      "原字节保留": false
+    },
+    {
+      "原路径": "django/docs/P8a清理调度回归日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a清理调度回归日志.txt",
+      "归档时SHA256": "5d5d4cd9ca60845d6b6ee64c18a41bb0b1dff5b8f368b124df0849c8800c34fb",
+      "当前SHA256": "5d5d4cd9ca60845d6b6ee64c18a41bb0b1dff5b8f368b124df0849c8800c34fb",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a示例二维码.png",
+      "归档路径": "docs/过程记录/P8a/P8a示例二维码.png",
+      "归档时SHA256": "1a412cbe55bb991fffcd7b093aae63a40344c227fca8a5b5604587f9d699aa15",
+      "当前SHA256": "1a412cbe55bb991fffcd7b093aae63a40344c227fca8a5b5604587f9d699aa15",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a认证主数据回归日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a认证主数据回归日志.txt",
+      "归档时SHA256": "5bec21ae808f6dc0010e5edcc1144cd40011d470b25b8cd31536041be55480c6",
+      "当前SHA256": "5bec21ae808f6dc0010e5edcc1144cd40011d470b25b8cd31536041be55480c6",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a附件回归日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a附件回归日志.txt",
+      "归档时SHA256": "f5d000cc026a4af8989bb9bad2d78f46ffef5f1aabf1e8d8343cf54300801e29",
+      "当前SHA256": "f5d000cc026a4af8989bb9bad2d78f46ffef5f1aabf1e8d8343cf54300801e29",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a静态配置及制品验收日志.txt",
+      "归档路径": "docs/过程记录/P8a/P8a静态配置及制品验收日志.txt",
+      "归档时SHA256": "a67679e3644dbf3fa8d5b139bfcb4b0c14080aaacaf3173746cb78d4bc5b5c62",
+      "当前SHA256": "a67679e3644dbf3fa8d5b139bfcb4b0c14080aaacaf3173746cb78d4bc5b5c62",
+      "原字节保留": true
+    },
+    {
+      "原路径": "django/docs/P8a页面检查记录.json",
+      "归档路径": "docs/过程记录/P8a/P8a页面检查记录.json",
+      "归档时SHA256": "012c59d179a1f1acf1f29205733eeb757d272c4faa44f75d1f785229df9c0089",
+      "当前SHA256": "012c59d179a1f1acf1f29205733eeb757d272c4faa44f75d1f785229df9c0089",
+      "原字节保留": true
+    },
+    {
+      "原路径": "P8a开发完成报告.md",
+      "归档路径": "docs/过程记录/P8a/P8a开发完成报告.md",
+      "归档时SHA256": "96e543c966e4f2e5bcda276fc40ce9a6b46be7815b9dcb164c06588149e75cc6",
+      "当前SHA256": "37efe5cfb4bd2ff38db12e98315853b34761fccb2ae672eeab7b25fd7aa02eed",
+      "原字节保留": false
+    }
+  ]
+}

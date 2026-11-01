@@ -3,6 +3,9 @@ from apps.core.auth_views import api_auth, html_auth
 from shared.master_views import api_resource, html_resource
 
 urlpatterns = [
+    path("", include("apps.repair.urls")),
+    path("", include("apps.procurement.urls")),
+    path("", include("apps.notifications.urls")),
     path("", include("apps.attachments.urls")),
     path("", include("apps.inventory.urls")),
     path("", include("apps.core.urls")),

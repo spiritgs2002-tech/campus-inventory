@@ -1,7 +1,7 @@
 -- schema-v7.sql —— PostgreSQL 16 新库基线（由 schema-v6.sql 修正而来，替代 v6 作为唯一基线）
 --
--- 【制品指纹】SHA-256(SQL 正文，自 BEGIN 语句起): eeab8d609555a567e59df98335fad7c99714473ba7b161f78f8a3d61c0c0f6c3
---              SQL 正文行数: 723
+-- 【制品指纹】SHA-256(SQL 正文，自 BEGIN 语句起): b6cda6e8e7f35a18813be25e17fc86db9e9c4064457f06ce243563263be5fb35
+--              SQL 正文行数: 791
 --   每次修改本文件必须同步更新指纹，并在真实 PG16 重跑 G0 与 v7-tools/test-negative.sql。
 --
 -- v7 相对 v6 的改动：①修正 4 个函数美元引号（reject_history_mutation/protect_order_header/
@@ -31,7 +31,7 @@
 --   单事务 COMMIT、0 报错；27 表 / 14 函数 / 32 触发器断言全等；
 --   v7-tools/test-negative.sql 21 项正负用例全通过。
 --
--- 请用独立数据库验证；正式迁移通过 Alembic 管理。本文件不宣称已通过实库验收。
+-- 请用独立数据库验证；正式迁移通过 Django 手写 RunSQL 管理。本文件不宣称已通过实库验收。
 BEGIN;
 
 CREATE TABLE tenants (
@@ -753,4 +753,73 @@ CREATE TRIGGER asset_card_frozen BEFORE UPDATE OR DELETE ON asset_cards FOR EACH
 -- N11：N6 的"是否被引用"判定与按卡查发放历史需要索引支撑。
 CREATE INDEX idx_scrap_attachment_ref ON scrap_attachments(tenant_id,attachment_id);
 CREATE INDEX idx_asset_issue_history ON outbound_assets(tenant_id,asset_card_id);
+-- P8A-ITEM-QR-BEGIN
+-- P8a: nullable item capability; no backfill in the schema transaction.
+ALTER TABLE items ADD COLUMN qr_token text;
+CREATE UNIQUE INDEX uq_items_tenant_qr ON items(tenant_id, qr_token) WHERE qr_token IS NOT NULL;
+CREATE INDEX idx_items_qr_lookup ON items(qr_token) WHERE qr_token IS NOT NULL;
+-- P8A-ITEM-QR-END
+-- P8B-PROCUREMENT-BEGIN
+CREATE TABLE procurement_requisition (
+ id bigserial PRIMARY KEY, tenant_id bigint NOT NULL REFERENCES tenants(id),
+ order_no text NOT NULL, applicant_id bigint NOT NULL, applicant_name text NOT NULL,
+ applicant_no text NOT NULL, item_id bigint NOT NULL, qty numeric(14,3) NOT NULL CHECK(qty>0),
+ reason text NOT NULL CHECK(length(reason) BETWEEN 1 AND 2000),
+ status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected','purchased')),
+ approved_by bigint, inbound_order_id bigint, reject_reason text,
+ created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(),
+ UNIQUE(tenant_id,id), UNIQUE(tenant_id,order_no), UNIQUE(tenant_id,inbound_order_id),
+ FOREIGN KEY(tenant_id,applicant_id) REFERENCES users(tenant_id,id),
+ FOREIGN KEY(tenant_id,item_id) REFERENCES items(tenant_id,id),
+ FOREIGN KEY(tenant_id,approved_by) REFERENCES users(tenant_id,id),
+ FOREIGN KEY(tenant_id,inbound_order_id) REFERENCES inbound_orders(tenant_id,id),
+ CHECK((status='purchased')=(inbound_order_id IS NOT NULL)),
+ CHECK(status NOT IN ('approved','purchased') OR approved_by IS NOT NULL),
+ CHECK(status!='rejected' OR length(trim(reject_reason))>0)
+);
+CREATE INDEX ix_req_tenant_applicant ON procurement_requisition(tenant_id,applicant_id);
+CREATE INDEX ix_req_tenant_status ON procurement_requisition(tenant_id,status);
+-- P8B-PROCUREMENT-END
+-- P8B-NOTIFICATIONS-BEGIN
+CREATE TABLE notifications_notification (
+ id bigserial PRIMARY KEY, tenant_id bigint NOT NULL REFERENCES tenants(id),
+ recipient_user_id bigint NOT NULL, recipient_name text, type text NOT NULL,
+ title text NOT NULL, body text NOT NULL, ref_type text, ref_id bigint,
+ is_read boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now(),
+ FOREIGN KEY(tenant_id,recipient_user_id) REFERENCES users(tenant_id,id),
+ CHECK(type IN ('requisition_arrived','requisition_rejected')),
+ UNIQUE(tenant_id,recipient_user_id,type,ref_type,ref_id)
+);
+CREATE INDEX ix_notif_tenant_user ON notifications_notification(tenant_id,recipient_user_id,is_read);
+-- P8B-NOTIFICATIONS-END
+-- P8C-REPAIR-BEGIN
+CREATE TABLE repair_repairticket (
+ id bigserial PRIMARY KEY,
+ tenant_id bigint NOT NULL REFERENCES tenants(id), ticket_no text NOT NULL,
+ reporter_user_id bigint NOT NULL, reporter_name text NOT NULL, reporter_no text NOT NULL,
+ target_type text NOT NULL CHECK(target_type IN ('asset','item','location')), target_id bigint,
+ description text NOT NULL CHECK(length(trim(description)) BETWEEN 1 AND 4000),
+ photo_attachment_id bigint,
+ priority text NOT NULL DEFAULT 'normal' CHECK(priority IN ('low','normal','high')),
+ status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','dispatched','repairing','done','cancelled')),
+ assigned_to bigint, reject_reason text,
+ created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(),
+ asset_target_id bigint GENERATED ALWAYS AS (CASE WHEN target_type='asset' THEN target_id END) STORED,
+ item_target_id bigint GENERATED ALWAYS AS (CASE WHEN target_type='item' THEN target_id END) STORED,
+ location_target_id bigint GENERATED ALWAYS AS (CASE WHEN target_type='location' THEN target_id END) STORED,
+ UNIQUE(tenant_id,id),
+ FOREIGN KEY(tenant_id,reporter_user_id) REFERENCES users(tenant_id,id),
+ FOREIGN KEY(tenant_id,assigned_to) REFERENCES users(tenant_id,id),
+ FOREIGN KEY(tenant_id,photo_attachment_id) REFERENCES attachments(tenant_id,id),
+ FOREIGN KEY(tenant_id,asset_target_id) REFERENCES asset_cards(tenant_id,id),
+ FOREIGN KEY(tenant_id,item_target_id) REFERENCES items(tenant_id,id),
+ FOREIGN KEY(tenant_id,location_target_id) REFERENCES locations(tenant_id,id),
+ CHECK(target_type='location' OR target_id IS NOT NULL),
+ CHECK(status NOT IN ('dispatched','repairing','done') OR assigned_to IS NOT NULL),
+ CHECK(reject_reason IS NULL OR length(reject_reason)<=2000)
+);
+CREATE UNIQUE INDEX uq_repair_tenant_no ON repair_repairticket(tenant_id,ticket_no);
+CREATE INDEX ix_repair_tenant_reporter ON repair_repairticket(tenant_id,reporter_user_id);
+CREATE INDEX ix_repair_tenant_status ON repair_repairticket(tenant_id,status);
+-- P8C-REPAIR-END
 COMMIT;

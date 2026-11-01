@@ -1,10 +1,6 @@
 # CI 交付定位说明
 
-> ⚠️ 中枢纠正（2026-10-31 19:57）：原"仓库根为 `/Users/andy/Desktop/saas`"的判定**不成立**。本沙箱内 `saas` 不是 git 仓库（无 `.git`），唯一的 git 仓库是同级独立的 `campus-repair`——即用户约定为 `saas/<项目>/` 各自成库。因此权威工作流已改为放在最可能的项目根：
-
-`/Users/andy/Desktop/saas/inventory-v4/.github/workflows/ci.yml`
-
-应用目录是 `/Users/andy/Desktop/saas/inventory-v4/django`。**请用户确认自己实际的 git 根**：如果 `inventory-v4/` 就是该项目的 git 仓库根（最可能是此情况），上述位置即正确；如果实际仓库根是 `inventory-v4/django/`（即 django 才是仓库根），则需把文件下移一层到 `inventory-v4/django/.github/workflows/ci.yml`。无论哪种，**必须保证文件位于你项目 `.git` 所在根的 `.github/workflows/ci.yml`**，GitHub 才会发现并触发。
+2026-11-01实测git rev-parse确认：当前真实Git根为 `/Users/andy/Desktop/saas/inventory-v4`，权威入口为该目录的 `.github/workflows/ci.yml`；应用位于其django/子目录。P8a保留既有门禁并加入verify_p8a。历史路径讨论见原验收报告，本说明以当前实际根为准。
 
 在应用目录执行（以 inventory-v4 为根示例）：
 
@@ -20,4 +16,6 @@ python scripts/verify_ci_delivery.py --repo-root /Users/andy/Desktop/saas/invent
 
 真实 Git 根有三种支持布局：根下直接有 `manage.py`；根下有 `django/manage.py`；SaaS根下有 `inventory-v4/django/manage.py`。入口文件都必须位于**该真实根的** `.github/workflows/ci.yml`。若在其他机器采用不同根层级，将 template 复制到实际根入口后再执行自检；仅设置工作目录不能改变GitHub的工作流发现规则。
 
-修改CI时同步根文件和template，再运行交付自检及测试。当前本地没有Git checkout，真实GitHub push/PR自动触发记录仍须在实际仓库留存。
+修改CI时同步根文件和template，再运行交付自检及测试。当前本地已有项目Git checkout；本次不执行commit/push，真实GitHub push/PR记录仍由中枢留存。
+
+P8a整改后增加 `scripts/sync_schema_snapshot.py --check`，在依赖安装前只读检查当前SQL指纹与快照一致性；默认precheck_sql也执行相同检查。P8a历史验收日志现归档到项目根docs/过程记录/P8a/，独立复验可用P8A_ARTIFACT_DIR指定新的制品目录。

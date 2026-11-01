@@ -90,7 +90,7 @@ def main():
             with psycopg.connect(**params, autocommit=True) as db:
                 assert (
                     db.execute("SELECT count(*) FROM django_migrations").fetchone()[0]
-                    == 6
+                    == 10
                 )
                 notices = []
                 db.add_notice_handler(

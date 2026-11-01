@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>报修工单 {{ ticket.ticket_no }}</h1>
+<dl><dt>报修人</dt><dd>{{ ticket.reporter_name }}（{{ ticket.reporter_no }}）</dd><dt>对象</dt><dd>{{ ticket.target_label }} {{ ticket.target_id|default_if_none:"未指定编号" }}</dd><dt>故障说明</dt><dd class="text-break">{{ ticket.description|linebreaksbr }}</dd><dt>紧急程度</dt><dd>{{ ticket.priority_label }}</dd><dt>状态</dt><dd>{{ ticket.status_label }}</dd><dt>处理人编号</dt><dd>{{ ticket.assigned_to|default_if_none:"待派单" }}</dd><dt>处理说明</dt><dd>{{ ticket.reject_reason|default:"—" }}</dd></dl>
+{% if ticket.photo_attachment_id %}<p><a href="/api/v1/attachments/{{ ticket.photo_attachment_id }}/download/">下载故障照片</a>（按原附件保留策略提供）</p>{% endif %}
+<p><a href="/s/repairs/">返回列表</a></p>
+{% endblock %}

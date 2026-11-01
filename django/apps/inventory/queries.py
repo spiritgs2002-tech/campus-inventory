@@ -1,10 +1,12 @@
 """Tenant-scoped read models. Ordinary users see availability and their assets."""
 
 from decimal import Decimal
+import re
 from django import forms
 from django.core.paginator import Paginator
 from django.db.models import DecimalField, F, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from apps.catalog.models import Item
 from shared.errors import BusinessError
 from . import orders
@@ -298,3 +300,32 @@ def asset_detail(principal, *, pk=None, token=None, params=None):
         serialize,
     )
     return {"record": asset_record(p, row, detail=True), "events": events}
+
+
+def resolve_scan(token, *, tenant_id=None):
+    """One opaque label capability resolves scope; all subsequent reads use it.
+
+    Anonymous callers have no ambient tenant. Never choose the first row when
+    legacy/manual tokens collide across kinds or schools. Logged-in callers
+    always provide their authenticated tenant and cannot fall back to anonymous.
+    """
+    if not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9_-]{32,128}", token):
+        raise BusinessError("NOT_FOUND", "二维码无效或不属于本学校", 404)
+    common = {"qr_token": token, "tenant__status": "active"}
+    if tenant_id is not None:
+        common["tenant_id"] = tenant_id
+    live = Q(tenant__expire_at__isnull=True) | Q(
+        tenant__expire_at__gte=timezone.localdate()
+    )
+    cards = (
+        AssetCard.objects.filter(**common, item__active=True)
+        .filter(live)
+        .select_related("item", "location")
+    )
+    items = Item.objects.filter(**common, active=True, type="consumable").filter(live)
+    matches = [("asset", row) for row in cards[:2]] + [
+        ("item", row) for row in items[:2]
+    ]
+    if len(matches) != 1:
+        raise BusinessError("NOT_FOUND", "二维码无效或不属于本学校", 404)
+    return matches[0]

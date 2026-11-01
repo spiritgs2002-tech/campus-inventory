@@ -2,7 +2,7 @@
 
 import hashlib
 from pathlib import Path
-from django.db import migrations
+from django.db import migrations, models
 from django.db.migrations.exceptions import IrreversibleError
 
 SQL_DIR = Path(__file__).resolve().parents[2] / "sql"
@@ -40,3 +40,16 @@ class RunSQLFile(migrations.RunSQL):
 
     def describe(self):
         return f"Apply pinned SQL file {self.filename}"
+
+
+class AddItemQRSQL(RunSQLFile):
+    """Handwritten SQL changes storage; only mirror its field in migration state."""
+
+    def state_forwards(self, app_label, state):
+        state.add_field(
+            app_label,
+            "item",
+            "qr_token",
+            models.TextField(null=True, db_index=True),
+            preserve_default=True,
+        )

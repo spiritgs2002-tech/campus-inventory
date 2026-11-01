@@ -26,7 +26,16 @@ INSTALLED_APPS = [
     "csp",
     *[
         f"apps.{name}"
-        for name in ("core", "catalog", "inventory", "attachments", "reconcile")
+        for name in (
+            "core",
+            "catalog",
+            "inventory",
+            "attachments",
+            "reconcile",
+            "procurement",
+            "repair",
+            "notifications",
+        )
     ],
 ]
 MIDDLEWARE = [
@@ -36,6 +45,7 @@ MIDDLEWARE = [
     "csp.middleware.CSPMiddleware",
     "django.middleware.common.CommonMiddleware",
     "apps.attachments.middleware.EvidenceUploadLimitMiddleware",
+    "apps.repair.middleware.RepairUploadLimitMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -48,6 +58,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "apps.notifications.context_processors.unread_count",
                 "django.template.context_processors.csrf",
             ]
         },
@@ -177,6 +188,14 @@ ATTACHMENT_CLEANUP_ENABLED = (
     os.environ.get("ATTACHMENT_CLEANUP_ENABLED", "false").lower() == "true"
 )
 ORPHAN_GRACE_HOURS = 24
+try:
+    PICKUP_ANONYMOUS_PER_MINUTE = int(
+        os.environ.get("PICKUP_ANONYMOUS_PER_MINUTE", "60")
+    )
+except ValueError:
+    raise ImproperlyConfigured("PICKUP_ANONYMOUS_PER_MINUTE must be 1-10000") from None
+if not 1 <= PICKUP_ANONYMOUS_PER_MINUTE <= 10000:
+    raise ImproperlyConfigured("PICKUP_ANONYMOUS_PER_MINUTE must be 1-10000")
 # One beat instance per deployment; overlapping deliveries remain idempotent.
 _test_interval = os.environ.get("MAINTENANCE_TEST_INTERVAL_SECONDS")
 if _test_interval and (not DEBUG or not 1 <= int(_test_interval) <= 60):

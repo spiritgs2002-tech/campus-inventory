@@ -1,2 +1,0 @@
-{"database_name": "campus_inventory", "host_key_codepoints": [68, 66, 95, 72, 79, 83, 84], "host_key_hex": "44425f484f5354", "legacy_key_present": false, "socket_override_readback": true}
-Configuration example assertions passed; no database connection made

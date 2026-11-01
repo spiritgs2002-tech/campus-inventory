@@ -1,4 +1,5 @@
 from decimal import Decimal
+import secrets
 from . import forms
 from .models import Category, Item, Location, Supplier
 from apps.core.services import audit, run_command, validated
@@ -128,6 +129,8 @@ def save(principal, resource, pk, key, payload):
         if obj.pk:
             obj.save(update_fields=list(data))
         else:
+            if resource == "items" and obj.type == "consumable":
+                obj.qr_token = secrets.token_urlsafe(32)
             obj.save(force_insert=True)
         after = serialize(resource, obj)
         audit_after = dict(after)

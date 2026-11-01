@@ -1,47 +1,43 @@
-# 固定 SQL 制品
+# SQL 制品与 P8a 增量迁移
 
-- `schema-v7.sql`：上级唯一 DDL 来源的逐字节交付副本，原文件 SHA-256 为 `2cc1062a3386ed9815fce2fbb60b05df8d3b5827d70fec9a586b5543ac367f82`。
-- `grant-runtime.sql` / `verify-runtime.sql`：来自上级 `v7-tools/`；P1 补充 Django 迁移记账保护及 NOLOGIN 检查，未改变 27 张业务表的 DDL。
-- `precheck-sql.py` / `test-negative.sql`：来自上级 `v7-tools/` 的原样副本。
-- `reconcile-v2.sql`：P5 只读对账的新版本，来自 `../v7-tools/reconcile-v2.sql`，SHA-256 为 `e4811e039ff8300ed9d20825e3f9f242494f806bf5ff0996667e28661baf05f5`。没有 DDL，不需要数据库迁移；不覆盖历史 reconcile.sql 或 P1 制品。当前 reconcile 管理命令只使用 v2。
+唯一当前DDL权威源为项目根 inventory-v4/schema-v7.sql。P8a新增items.qr_token及两个索引，已有27表/14函数/32触发器的SQL正文保持不变。
 
-初始 schema/grant 的哈希固定在 `core/0001_initial` 中。不要单独修改这些副本，也不要修改已发布迁移；后续变更另写版本迁移。
+| 权威内容 | 打包制品 | 用途 |
+|---|---|---|
+| 项目根 schema-v7.sql 当前完整快照 | sql/schema-v7-current.sql | 自动同步的逐字节副本、静态预检、独立审阅；不是第二份可独立编辑的来源 |
+| 权威文件 P8A-ITEM-QR-BEGIN / END 章节 | sql/p8a-item-qr.sql | 同一章节加BEGIN/COMMIT，手写增量RunSQL，固定SHA-256 |
+| P7发布时的历史schema | sql/schema-v7.sql | core/0001_initial固定制品，禁止覆盖 |
+| ../v7-tools/grant-runtime.sql、verify-runtime.sql等 | sql/同名文件 | 已发布权限与验证制品，保持原字节 |
+| ../v7-tools/reconcile-v2.sql | sql/reconcile-v2.sql | 13项只读内部一致性对账 |
 
-## 权威源与副本
+历史schema-v7.sql的SHA-256仍为2cc1062a3386ed9815fce2fbb60b05df8d3b5827d70fec9a586b5543ac367f82。不能用当前完整快照覆盖它，也不能改已发布初始迁移中的哈希。新库按“冻结P7基线→P8a增量”安装；旧库只执行新增catalog/0002_add_item_qr。迁移总数由6变7，G0计数仍27/14/32。
 
-在 SaaS 项目中，**唯一 DDL 权威源为 `inventory-v4/schema-v7.sql`**，工具脚本权威源为 `inventory-v4/v7-tools/`。本目录只保存发布时的字节相同副本，不是第二个可独立维护的来源。独立交付 Django 目录时使用固定副本，保留初始迁移哈希以核验来源。
+新操作AddItemQRSQL继承RunSQLFile（RunSQL子类），整文件执行DDL并按其哈希校验。state_forwards只镜像手写SQL新增的ORM字段，不调用AddField/自动生成DDL，所有模型继续managed=False。迁移atomic=False，SQL文件自身的BEGIN/COMMIT保护新增列及索引；不提供破坏性降级。
 
-| 权威源（相对 django/） | 交付副本 |
-|---|---|
-| ../schema-v7.sql | sql/schema-v7.sql |
-| ../v7-tools/grant-runtime.sql | sql/grant-runtime.sql |
-| ../v7-tools/verify-runtime.sql | sql/verify-runtime.sql |
-| ../v7-tools/precheck-sql.py | sql/precheck-sql.py |
-| ../v7-tools/test-negative.sql | sql/test-negative.sql |
-| ../v7-tools/reconcile-v2.sql | sql/reconcile-v2.sql |
+### 当前快照同步与防漂移
 
-## 同步与复核
-
-仅在**尚未发布的新制品**打包时，从已审定的权威源复制文件。已发布的 P1 基线及迁移不得覆盖；后续 SQL 变更新建版本文件与手写迁移，沿用以下“源文件 → 同版本副本 → 校验”流程。不要从副本反向覆盖权威源，也不要只修改副本或仅更新迁移哈希来绕过检查。
-
-以下是当前 P1 制品的同步位置示例，在 `django/` 下执行；本次整改无需重新复制，因为现有文件字节一致：
+在 django/ 目录运行：
 
 ```sh
-cp ../schema-v7.sql sql/schema-v7.sql
-for name in grant-runtime.sql verify-runtime.sql precheck-sql.py test-negative.sql; do
-  cp "../v7-tools/$name" "sql/$name"
-done
+# 只读：复算文件头指纹和正文行数，校验当前快照逐字节一致。
+python scripts/sync_schema_snapshot.py --check
+# 仅在编辑根权威源后执行：更新其文件头，并同步当前快照。
+python scripts/sync_schema_snapshot.py --write
+python manage.py precheck_sql
 ```
 
-复核来源一致性及哈希，并执行现有守护测试：
+指纹范围明确为独立 `BEGIN;` 语句行的首字节至文件末尾，包含最后换行；正文行数使用该范围的 splitlines()。不能从注释中的 BEGIN 单词起算。默认检查、管理命令和CI都不会静默修复错误。单独交付django/时检查打包快照自身；缺少根权威源时拒绝 --write。
 
-```sh
-cmp ../schema-v7.sql sql/schema-v7.sql
-for name in grant-runtime.sql verify-runtime.sql precheck-sql.py test-negative.sql; do
-  cmp "../v7-tools/$name" "sql/$name" || exit 1
-done
-shasum -a 256 sql/schema-v7.sql sql/grant-runtime.sql
-uv run python manage.py test tests.test_models.ModelContractTests
-```
+同步工具只更新根源文件头和 schema-v7-current.sql，永不修改冻结 schema-v7.sql、增量SQL或迁移哈希。新DDL必须另建增量；P8a权威章节与增量的关系仍由tests.test_p8a_migrations验证。删除旧基线或用当前快照覆盖它，会使core/0001_initial的SHA校验失败，或令后续增量重复新增列，因此不能按同名普通副本去重。
 
-测试配置按项目 README 注入。涉及新 SQL 行为时，还须在独立 PG16 测试库执行相应迁移及 `scripts/verify_p1.py`，不能以哈希一致或静态预检代替真实数据库验收。
+apply_schema仅在专用应用库使用迁移owner；日常运行使用普通inventory_runtime成员LOGIN。新增列可空，不在DDL里回填。二维码回填在管理员标签页POST或受控generate_item_qr命令中分批完成。
+
+普通CREATE INDEX在迁移时会加锁；本次未验证生产规模的大表耗时，部署前应备份并在预发/维护窗口确认锁和超时预算。故障前回滚及P7存量数据升级的历史证据见 [P8a归档](../../docs/过程记录/P8a/README.md)。
+
+## P8b增量
+
+根权威源新增P8B-PROCUREMENT与P8B-NOTIFICATIONS章节，当前完整快照包含29表/14函数/32触发器。两份新增量p8b-procurement.sql及p8b-notifications.sql分别固定SHA，由对应app的0001迁移执行，含新表/序列运行权限；已有P7/P8a制品不变。新库当前9条迁移，P8a旧库只增加2条；同步工具不改写历史增量。
+
+## P8c增量
+
+当前权威源新增P8C-REPAIR章节，完整快照为30表/14函数/32触发器。p8c-repair.sql由repair/0001以固定SHA执行，新库10条迁移、P8b旧库增加1条。新表中三个生成列按target_type映射asset/item/location，并各自建立tenant+ID复合外键；不是新增业务表或触发器。旧SQL与迁移字节保持不变，照片保留策略继续由既有附件服务维护。

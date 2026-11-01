@@ -1,0 +1,5 @@
+{% load static %}<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>{% block title %}校园报修{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'pickup.css' %}"><link rel="stylesheet" href="{% static 'repair.css' %}">
+</head><body><main class="mobile-shell"><header class="mobile-header"><a href="/s/repair/new/">校园报修</a><span>故障登记</span></header>{% block content %}{% endblock %}</main></body></html>

@@ -1,0 +1,15 @@
+{% extends "repair/base.html" %}
+{% block title %}报修登记{% endblock %}
+{% block content %}
+<h1>报修登记</h1>
+<p>填写具体位置和故障现象，便于总务安排处理。</p>
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+<input type="hidden" name="idempotency_key" value="{{ key }}">
+{{ form.as_p }}
+{% if principal %}<label for="photo">故障照片（可选，PNG/JPEG，最多10MiB）</label><input id="photo" name="photo" type="file" accept="image/png,image/jpeg">
+{% else %}<p>免密登记须填写姓名和工号，并从有效的校园二维码进入。上传照片请先<a href="/auth/login/">登录</a>；也可先提交文字报修。</p>{% endif %}
+<button type="submit">提交报修</button>
+</form>
+{% if principal %}<p><a href="/s/repairs/">查看我的工单</a></p>{% endif %}
+{% endblock %}

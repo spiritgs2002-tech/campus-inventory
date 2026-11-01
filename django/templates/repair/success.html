@@ -1,0 +1,3 @@
+{% extends "repair/base.html" %}
+{% block title %}报修已登记{% endblock %}
+{% block content %}<h1>报修已登记</h1><p>工单号：{{ document.ticket_no }}</p><p>当前状态：待派单</p>{% if replay %}<p>本次为重复提交，未重复建单。</p>{% endif %}{% if principal %}<a href="/s/repairs/{{ document.id }}/">查看工单</a>{% else %}<p>免密登记信息未经核验。请记下工单号；由管理员核验同工号账号后登录查阅。</p>{% endif %}{% endblock %}

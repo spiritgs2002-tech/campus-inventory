@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{% if admin %}报修处理{% else %}报修工单{% endif %}</h1>
+<p><a href="/s/repair/new/">新增报修</a></p>
+<form method="get">{{ filter.status.label_tag }}{{ filter.status }}<button>筛选</button></form>
+{% for row in page %}
+<article class="card p-3 my-3">
+<h2 class="h5"><a href="/s/repairs/{{ row.pk }}/">{{ row.ticket_no }}</a></h2>
+<p>{{ row.reporter_name }} · {{ row.target_label }} {{ row.target_id|default_if_none:"未指定编号" }} · {{ row.priority_label }} · {{ row.status_label }}</p>
+<p class="text-break">{{ row.description }}</p>
+{% if admin %}
+{% if row.status == 'pending' %}
+<form method="post" action="/manage/repairs/{{ row.pk }}/dispatch/">{% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ key }}-dispatch-{{ row.pk }}"><label for="assigned-{{ row.pk }}">处理人</label><select id="assigned-{{ row.pk }}" name="assigned_to" required><option value="">请选择</option>{% for user in users %}<option value="{{ user.pk }}">{{ user.name }}（{{ user.username }}）</option>{% endfor %}</select><button>派单</button></form>
+{% endif %}
+{% if row.status != 'done' and row.status != 'cancelled' %}
+<form method="post" action="/manage/repairs/{{ row.pk }}/status/">{% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ key }}-status-{{ row.pk }}"><label for="reason-{{ row.pk }}">处理说明</label><input id="reason-{{ row.pk }}" name="reason" maxlength="2000">{% if row.status == 'dispatched' %}<button name="action" value="start">开始处理</button>{% elif row.status == 'repairing' %}<button name="action" value="done">完成</button>{% endif %}<button name="action" value="cancel">取消工单</button></form>
+{% endif %}
+{% endif %}
+</article>
+{% empty %}<p>暂无工单</p>{% endfor %}
+{% if page.has_previous %}<a href="?status={{ status|urlencode }}&amp;page={{ page.previous_page_number }}">上一页</a>{% endif %}
+<span>第{{ page.number }}/{{ page.paginator.num_pages }}页</span>
+{% if page.has_next %}<a href="?status={{ status|urlencode }}&amp;page={{ page.next_page_number }}">下一页</a>{% endif %}
+{% endblock %}

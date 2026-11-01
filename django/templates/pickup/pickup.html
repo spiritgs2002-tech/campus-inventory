@@ -1,0 +1,20 @@
+{% extends 'pickup/base.html' %}{% block title %}{{ name }} · 扫码领用{% endblock %}
+{% block content %}<p class="eyebrow">{{ school_name }} · {% if kind == 'asset' %}固定资产{% else %}耗材{% endif %} · 扫码领取</p>
+<h1>{{ name }}</h1><p class="muted">{{ code }}</p>
+<section class="panel"><p>位置：{{ locations|default:'暂无可用库位' }}</p>
+{% if kind == 'asset' %}<p>状态：{{ status_label }}</p>{% else %}<p>当前可用：<strong>{{ available }} {{ unit }}</strong></p>{% endif %}</section>
+{% if success %}<section class="panel success" role="status"><h2>领用成功</h2><p>单号：{{ success.document.order_no }}</p><p>数量：{{ success.pickup.quantity }} {{ unit }}</p>
+<h3>请按以下库位领取</h3><ul>{% for allocation in success.pickup.allocations %}<li>{{ allocation.location }}：{{ allocation.quantity }} {{ unit }}</li>{% endfor %}</ul>
+{% if success.pickup.identity == 'unverified' %}<p>姓名工号已登记，身份尚未经核验；此登记不产生登录权限。</p>{% endif %}
+{% if replayed %}<p>这是原请求的结果，没有重复出库。</p>{% endif %}</section>
+{% else %}
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if login_blocked %}<section class="panel"><p class="error">{{ login_error }}</p><a class="button" href="{{ login_url }}">确认登录状态后领取</a><p>本页仅展示扫码物品，当前登录状态不允许提交领用。</p></section>{% else %}
+<form method="post" class="panel">{% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ idempotency_key|default:'' }}">
+{% if principal %}<p>当前登录：<strong>{{ principal.name }}</strong>（本人领取）</p>{% else %}<h2>登记领取人</h2><p class="muted">未登录，请填写姓名与工号。已有正式账户请先<a href="/auth/login/">登录</a>。</p>
+<label for="pickup-name">姓名</label><input id="pickup-name" name="name" maxlength="120" required autocomplete="name" value="{{ form.name.value|default:'' }}">
+<label for="pickup-employee">工号</label><input id="pickup-employee" name="employee_no" maxlength="80" required autocomplete="off" value="{{ form.employee_no.value|default:'' }}">
+<p class="muted">免密登记仅用于留痕，不代表身份已核验。</p>{% endif %}
+<label for="pickup-quantity">领用数量（{{ unit }}）</label><input id="pickup-quantity" name="quantity" type="number" min="{% if kind == 'asset' %}1{% else %}0.001{% endif %}" max="{{ available }}" step="{% if kind == 'asset' %}1{% else %}0.001{% endif %}" value="{{ form.quantity.value|default:'1' }}" {% if kind == 'asset' %}readonly{% endif %} required>
+<button {% if not available %}disabled{% endif %}>确认领用</button>{% if not available %}<p class="muted">当前不可领取，请联系总务处。</p>{% endif %}</form>{% endif %}
+{% endif %}<p class="muted">领用人和物品由当前身份及二维码确定，不支持代领或更换物品。</p>{% endblock %}

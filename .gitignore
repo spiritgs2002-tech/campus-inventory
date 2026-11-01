@@ -23,3 +23,7 @@ uploads/
 .DS_Store
 .idea/
 .vscode/
+
+# Local audit artifacts, retained outside delivery
+**/_codex_raw_logs(备查)/
+**/_django_codex_logs(备查)/

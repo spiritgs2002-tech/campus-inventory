@@ -77,6 +77,7 @@ class Item(models.Model):
     spec = models.TextField(null=True)
     reference_price = models.DecimalField(max_digits=14, decimal_places=2, null=True)
     safety_stock = models.DecimalField(max_digits=14, decimal_places=3, null=True)
+    qr_token = models.TextField(null=True, db_index=True)
     active = models.BooleanField(db_default=RawSQL("true", ()))
     updated_at = models.DateTimeField(db_default=RawSQL("now()", ()), editable=False)
 

@@ -1,0 +1,10 @@
+{% extends 'pickup/base.html' %}{% block title %}库存查询 · 校园总务{% endblock %}{% block content %}
+<p class="eyebrow">{{ principal.name }} · 本校库存</p><h1>找一件需要的物品</h1>
+<form method="get" class="search"><label class="sr-only" for="inventory-search">搜索名称或编号</label><input id="inventory-search" name="q" maxlength="100" value="{{ q }}" placeholder="输入物品名称或编号"><button>搜索</button></form>
+<h2>耗材</h2>{% for row in stocks.records %}<article class="panel"><h3>{{ row.item_name }}</h3><p class="muted">{{ row.code }} · {{ row.unit }}</p>
+<p>{% if row.available %}有货{% else %}无可用库存{% endif %}{% if row.low_stock %} · 库存不足{% endif %}</p>{% if principal.role == 'admin' %}<p>{{ row.quantity }} {{ row.unit }} · {{ row.location_name }}</p>{% endif %}
+{% if not row.available or row.low_stock %}<a class="button secondary" href="/s/requisition/new/">申请</a>{% endif %}</article>{% empty %}<p class="muted">暂无符合条件的耗材。</p>{% endfor %}
+<nav class="pages">{% if stocks.page > 1 %}<a href="?q={{ q|urlencode }}&stock_page={{ stocks.page|add:'-1' }}&asset_page={{ assets.page }}">上一页</a>{% endif %}<span>{{ stocks.page }} / {{ stocks.pages }}</span>{% if stocks.page < stocks.pages %}<a href="?q={{ q|urlencode }}&stock_page={{ stocks.page|add:'1' }}&asset_page={{ assets.page }}">下一页</a>{% endif %}</nav>
+<h2>{% if principal.role == 'admin' %}固定资产{% else %}我正在使用的资产{% endif %}</h2>{% for row in assets.records %}<article class="panel"><h3>{{ row.item_name }}</h3><p>{{ row.asset_no }} · {{ row.status_label }}</p><p class="muted">{{ row.location_name }}</p><a href="/assets/{{ row.id }}/">查看详情</a></article>{% empty %}<p class="muted">暂无符合条件的资产。</p>{% endfor %}
+<nav class="pages">{% if assets.page > 1 %}<a href="?q={{ q|urlencode }}&asset_page={{ assets.page|add:'-1' }}&stock_page={{ stocks.page }}">上一页</a>{% endif %}<span>{{ assets.page }} / {{ assets.pages }}</span>{% if assets.page < assets.pages %}<a href="?q={{ q|urlencode }}&asset_page={{ assets.page|add:'1' }}&stock_page={{ stocks.page }}">下一页</a>{% endif %}</nav>
+{% if principal.role == 'admin' %}<p><a href="/s/labels/">生成与打印二维码标签</a></p>{% endif %}{% endblock %}

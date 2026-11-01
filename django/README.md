@@ -1,4 +1,4 @@
-# 学校总务库存系统 · P0–P7
+# 学校总务库存系统 · P0–P8c
 
 Python 3.13、Django 5.2、PostgreSQL 16；依赖由 uv.lock 锁定。
 
@@ -41,11 +41,15 @@ uv run python manage.py runserver 127.0.0.1:8000
 
 ## DDL 与制品约束
 
-上级 `schema-v7.sql` 是唯一 DDL 来源。`sql/` 为其**逐字节副本**及验证脚本，使此目录能独立交付；副本不得单独修改。源文件与副本的对应关系、同步及复核步骤见 [SQL 制品说明](sql/README.md)。迁移中的 SHA-256 固定 schema/grant 字节，变更会拒绝执行。后续数据库变更必须新增手写版本迁移，不得重写已应用迁移及制品。
+上级 `schema-v7.sql` 是唯一当前DDL来源，其逐字节完整快照为 `sql/schema-v7-current.sql`。发布过的 `sql/schema-v7.sql` 保留为P7冻结基线；P8a使用新增的 `sql/p8a-item-qr.sql` 和手写 `catalog/0002_add_item_qr` 迁移扩展，不能把新快照覆盖到初始迁移制品。迁移中的SHA-256继续校验对应版本字节。源文件、副本及增量关系见 [SQL制品说明](sql/README.md)。
+
+`python scripts/sync_schema_snapshot.py --check` 只读校验当前指纹及快照一致性；编辑根权威源后用 `--write` 同步当前快照，历史迁移制品永不重写。`precheck_sql` 和CI已接入此校验。
+
+P8a过程报告与验收日志统一归档到 [项目docs/过程记录/P8a](../docs/过程记录/P8a/README.md)，使用方法见 [P8a操作与复验说明](../docs/使用说明/P8a操作与复验说明.md)。复验脚本通过 `P8A_ARTIFACT_DIR` 指定制品目录，默认归档在项目docs/内，不再写入django/docs/。
 
 `core/0001_initial` 的两个 `RunSQLFile`（RunSQL 子类）分别整文件执行 schema、grant。两文件各自带 BEGIN/COMMIT，因此迁移设 `atomic=False`；**schema 是单事务，schema + grant + Django 记账并非一个共同事务**。schema 失败会回滚全部业务 DDL；若 schema 已提交而 grant/记账失败，停止重试，由 DBA 验证后恢复备份或重新建立空测试库；`apply_schema` 不自动 fake、不删库、不覆盖已有表。
 
-其余迁移使用 `SeparateDatabaseAndState(database_operations=[])` 保存 27 个 unmanaged ORM 模型状态，不执行 DDL。两张无 id 的表使用 Django 5.2 CompositePrimaryKey；复合关系由 ForeignObject 映射，仍以数据库复合外键兜底。xid8 由触发器赋值并 RETURNING；生成列不参与 ORM 写入。
+P1模型状态迁移使用 `SeparateDatabaseAndState(database_operations=[])` 保存27个unmanaged映射。P8a的RunSQL子类只在state_forwards镜像新增字段，不使用AddField生成DDL。两张无id的表使用Django5.2 CompositePrimaryKey，复合关系仍由数据库复合外键兜底。当前共7条迁移，G0仍27/14/32；xid8由触发器赋值，生成列不参与ORM写入。
 
 跨 app 关联使用字符串模型名。P2 已接入会话族与 JWT，P3 的服务和查询均使用认证结果中的租户 ID，拒绝请求体覆盖租户。Django session 使用签名 Cookie 后端，服务端每次通过 B9 单条联查核验数据库会话族；不需要内置 auth/session/admin 表。
 
@@ -154,6 +158,7 @@ uv run python scripts/verify_p5.py
 # Requires an installed Redis binary; the script starts/stops its own loopback instance.
 REDIS_SERVER=/absolute/path/to/redis-server uv run python scripts/verify_p6.py
 REDIS_SERVER=/absolute/path/to/redis-server uv run python scripts/verify_p7.py
+uv run python scripts/verify_p8a.py
 ```
 
 脚本仅新建并清理自己生成的唯一命名测试库及身份，不删除现有库；验证非超级用户迁移、重复迁移、G0、权限断言、原 21 项 SQL 用例、真实普通登录身份拒绝越权、提交前故障全部回滚，以及 Django 测试套件。测试会创建/复用集群级 `inventory_runtime` 权限角色，因此仅在独立测试 PG 集群运行。
@@ -161,9 +166,9 @@ REDIS_SERVER=/absolute/path/to/redis-server uv run python scripts/verify_p7.py
 只跑无数据库回归：`uv run python manage.py test tests.test_config_examples tests.test_scaffold tests.test_sql_operation tests.test_models.ModelContractTests`。
 只跑全量套件：`uv run python manage.py test tests --noinput -v2`，需要测试登录可建测试库。
 
-CI 工作流现位于 SaaS 根目录 [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)，name 为 ci，push/PR 触发。旧嵌套工作流已移除。Locate application 兼容应用本身作为仓库根、`inventory-v4/django` 和 `django` 三种布局。verify_p1 已内含全量 Django 测试；工作流仍在 verify_p7 后显式创建专用 `campus_inventory` 测试基线、apply_schema 并再次执行完整套件，另列 G0/M1 检查。`postgres` 维护库只供 DBA 测试脚本建立临时库，不能在其中应用业务 schema。当前目录未初始化 Git；文件落在预定根路径不代表远端已自动执行，实际 GitHub 仓库根及 push/PR 记录须独立确认。
+CI工作流位于当前实际Git根 inventory-v4/ 的 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)，name为ci，push/PR触发。Locate兼容应用根、inventory-v4/django和django三种布局；保留P1–P7及readiness，并新增verify_p8a升级/并发验证。完整套件仍独立执行，使用专用campus_inventory基线，另列G0/M1。postgres维护库只供测试脚本创建临时库。
 
-交付自检：在应用目录执行 `python scripts/verify_ci_delivery.py --repo-root /Users/andy/Desktop/saas`，会输出根工作流绝对路径、SHA-256、模板一致性及显式测试接入状态。CI 在安装依赖前也执行此检查，缺文件、模板漂移、遗漏阶段/测试或重复嵌套工作流都会阻断。可移植副本为 [docs/ci/ci.yml.template](docs/ci/ci.yml.template)，供项目以其他层级作为真实 Git 根时复制到其 `.github/workflows/ci.yml`；不能靠 working-directory 使嵌套文件被 GitHub 发现。只扫描 `inventory-v4/` 会漏掉当前 SaaS 根入口，复验须使用上述命令或直接检查其绝对路径。详情见 [CI交付定位说明](docs/ci/README.md)。
+交付自检：`python scripts/verify_ci_delivery.py --repo-root /Users/andy/Desktop/saas/inventory-v4`。根入口和 [可移植副本](docs/ci/ci.yml.template) 必须一致；只设置working-directory不能使嵌套文件被GitHub发现。当前Git根已本地核验，远端Actions及提交/推送仍由中枢完成。详情见 [CI交付定位说明](docs/ci/README.md)。
 
 `verify_p4.py` 另建临时库与普通 LOGIN，执行六种双线程竞争：同键提交、重复执行、库存竞争、累计归还、相同调整快照与采购退货额度；不复用业务库。测试日志见 docs/P4全量验收日志.txt、docs/P4并发验收日志.txt。
 
@@ -239,3 +244,11 @@ uv run celery -A campus_inventory beat --loglevel=INFO --schedule /private/ops/i
 部署前创建受控、可写且持久的 beat 目录，示例路径不由应用自动创建。worker 和 beat 使用同一套环境、队列与私有 Redis；配置变更后重启两者。任务使用 JSON、迟确认、原 task ID 重试，失败10/20/30秒退避最多3次，进程丢失可重投；5xx及对象未确认删除会重试，最终失败记录 ERROR 和 `ok=false`。监控必须检查该业务结果及 ERROR，不能只看 Celery SUCCESS。已排队任务不会因停止 beat 自动消失；关闭维护开关并重启 worker 可拒绝剩余清理。人工命令是显式操作，不受自动调度总开关限制，仍受租户 allowlist 和证据开关限制。
 
 `verify_p7.py` 在临时库和普通 LOGIN 上实际启动 Redis、worker、beat，验证会话整族规则、90天响应、对象503后的已提交墓碑、原键重试、元数据/关联保留、孤儿分页、登记竞争、保全竞争、调度停止与持久计划重启。测试专用秒级间隔仅 DEBUG 下允许。生产启用、云桶联调、远端 CI 和实物抽盘均须分别留存独立证据。
+
+## P8b 请购与通知
+
+新增两表，当前G0为29/14/32、共9条迁移；文中P8a的27/14/32及7条迁移为该阶段历史范围。请购与站内通知已接线，见 [P8b操作与复验说明](../docs/使用说明/P8b操作与复验说明.md)；专项验证执行 `python scripts/verify_p8b.py`。
+
+## P8c 通用报修
+
+当前schema为30表/14函数/32触发器、共10条迁移；上文各阶段计数为对应历史范围。报修登记、本人查询及管理员派单/进度已接线，详见 [P8c操作与复验说明](../docs/使用说明/P8c操作与复验说明.md)。专项闸门为 `python scripts/verify_p8c.py`；免密支持文字报修，照片须登录并复用既有附件服务；工单不自动改变资产状态。

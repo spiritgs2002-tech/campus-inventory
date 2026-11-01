@@ -42,6 +42,8 @@ jobs:
           fi
       - name: Verify canonical CI delivery
         run: python "$APP_DIR/scripts/verify_ci_delivery.py" --repo-root "$GITHUB_WORKSPACE"
+      - name: Verify authoritative SQL fingerprint and current snapshot
+        run: python "$APP_DIR/scripts/sync_schema_snapshot.py" --check
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.12.15"
@@ -77,6 +79,12 @@ jobs:
       - run: uv run python scripts/verify_p6.py
         working-directory: ${{ env.APP_DIR }}
       - run: uv run python scripts/verify_p7.py
+        working-directory: ${{ env.APP_DIR }}
+      - run: uv run python scripts/verify_p8a.py
+        working-directory: ${{ env.APP_DIR }}
+      - run: uv run python scripts/verify_p8b.py
+        working-directory: ${{ env.APP_DIR }}
+      - run: uv run python scripts/verify_p8c.py
         working-directory: ${{ env.APP_DIR }}
       - name: Create dedicated Django suite baseline database
         working-directory: ${{ env.APP_DIR }}

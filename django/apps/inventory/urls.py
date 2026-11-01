@@ -1,8 +1,16 @@
 from django.urls import path
 from .order_views import api_orders, api_observe, html_orders
 from .read_views import api_read, api_repair, html_read, html_repair
+from . import pickup_views
 
 urlpatterns = [path("api/v1/inventory/observe/", api_observe)]
+urlpatterns += [
+    path("s/pickup/<slug:token>/", pickup_views.html_pickup, name="pickup"),
+    path("api/v1/pickup/<slug:token>/", pickup_views.api_pickup, name="api-pickup"),
+    path("s/inventory/", pickup_views.html_inventory_mobile, name="inventory-mobile"),
+    path("api/v1/qr/<slug:token>/png", pickup_views.api_qr_png, name="qr-png"),
+    path("s/labels/", pickup_views.html_labels, name="qr-labels"),
+]
 for resource, route in [
     ("stock", "stock"),
     ("ledger", "stock/ledger"),

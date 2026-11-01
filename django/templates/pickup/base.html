@@ -1,0 +1,7 @@
+{% load static %}<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer"><title>{% block title %}校园领用{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'pickup.css' %}"></head><body><main class="mobile-shell">
+<header class="mobile-header"><a href="/s/inventory/">校园总务</a><span>自助领用</span></header>
+{% block content %}{% endblock %}
+</main></body></html>

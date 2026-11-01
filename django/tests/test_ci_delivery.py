@@ -32,6 +32,7 @@ class CIDeliveryTests(SimpleTestCase):
                 self.assertEqual(result["application_root"], str(app.resolve()))
                 self.assertEqual(result["workflow"], str(workflow.resolve()))
                 self.assertTrue(result["explicit_test_suite"])
+                self.assertTrue(result["sql_snapshot_guard"])
 
     def test_missing_root_workflow_is_rejected_even_if_nested_exists(self):
         root, app, workflow, _ = self.layout()
@@ -59,6 +60,7 @@ class CIDeliveryTests(SimpleTestCase):
         for text, message in [
             ("scripts/verify_p6.py", "CI_PHASE_MISSING"),
             ("manage.py test tests --no-input", "CI_TEST_SUITE_MISSING"),
+            ("scripts/sync_schema_snapshot.py", "CI_SCHEMA_GUARD_MISSING"),
         ]:
             with self.subTest(removed=text):
                 root, _, workflow, template = self.layout()
