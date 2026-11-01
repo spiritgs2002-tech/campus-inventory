@@ -75,6 +75,11 @@ DATABASES = {
         "HOST": os.environ.get("DB_HOST", "localhost"),
         "PORT": os.environ.get("DB_PORT", "5432"),
         "CONN_MAX_AGE": 60,
+        # CI 预建测试库并以运行身份复用：指定测试库名后配合 --keepdb 直连，
+        # 避免测试运行身份需要 CREATEDB（会触发 require_runtime 拒绝）。
+        "TEST": {
+            "NAME": os.environ.get("TEST_DB_NAME") or None,
+        },
         "ATOMIC_REQUESTS": True,
         "OPTIONS": {
             "connect_timeout": 5,
@@ -126,6 +131,9 @@ SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Strict"
 SECURE_SSL_REDIRECT = not DEBUG
+# 部署在反向代理（nginx）后，信任 X-Forwarded-Proto，避免 301 重定向死循环。
+# 仅当确有可信代理前置时才启用；单独暴露应用时切勿开启。
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG

@@ -1,0 +1,24 @@
+# 一键部署配置文件示例
+# 用法：复制为同目录 deploy.conf 后填写，再运行 ./deploy.sh --auto
+# 不提供本文件时，deploy.sh 会交互式询问（带默认值，回车即可）。
+
+# 校内访问域名（用于生成自签证书 + ALLOWED_HOSTS）
+# 有校内 DNS 就填域名，没有就填服务器内网 IP，例如 192.168.10.20
+DOMAIN=inventory.school.edu
+
+# 首个租户（学校）信息
+TENANT_CODE=DEMO-SCHOOL
+TENANT_NAME=示范学校
+ADMIN_USER=admin
+
+# 数据库名（默认即可）
+DB_NAME=campus_inventory
+
+# 对象存储：minio（默认，校内自托管，数据不出校）或 s3（外部云）
+STORAGE_MODE=minio
+
+# 仅当 STORAGE_MODE=s3 时填写（endpoint 必须是 https，合规要求境内可用区）
+# ATTACHMENT_S3_ENDPOINT=https://oss-cn-hangzhou.aliyuncs.com
+# ATTACHMENT_S3_BUCKET=your-bucket
+# AWS_ACCESS_KEY_ID=xxxx
+# AWS_SECRET_ACCESS_KEY=yyyy

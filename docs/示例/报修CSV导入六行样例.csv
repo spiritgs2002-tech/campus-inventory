@@ -1,0 +1,7 @@
+﻿reporter_name,reporter_no,description,target_type,target_name,status,assigned_to_no,note
+导入教师,FORM001,门锁损坏,location,,,,教学楼
+导入教师,FORM001,照明故障,location,总库,,,
+导入教师乙,FORM002,包装受损,item,PAPER,,,
+导入教师丙,FORM003,物品异常,item,复印纸,,,
+导入教师,FORM001,历史已处理,location,,done,u,
+错误行,工号不合规,错误示例,location,,,,

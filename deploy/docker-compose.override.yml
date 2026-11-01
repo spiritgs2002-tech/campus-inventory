@@ -1,0 +1,52 @@
+# 一键部署依赖的覆盖文件；docker compose 会自动与本目录 docker-compose.yml 合并。
+# 作用：暴露 443、挂载 TLS 证书、捆绑本地 MinIO（对象存储）、挂载附件卷与 MinIO CA。
+# 由 deploy.sh 复用；一般无需手改。
+
+services:
+  nginx:
+    ports:
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+
+  web:
+    volumes:
+      - attachments:/app/attachments
+      - ./certs/minio/ca.crt:/ca/minio-ca.crt:ro
+    environment:
+      AWS_CA_BUNDLE: /ca/minio-ca.crt
+
+  worker:
+    volumes:
+      - attachments:/app/attachments
+      - ./certs/minio/ca.crt:/ca/minio-ca.crt:ro
+    environment:
+      AWS_CA_BUNDLE: /ca/minio-ca.crt
+
+  minio:
+    image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+    command: server /data --certs-dir /certs
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_CERTS_DIR: /certs
+    volumes:
+      - miniodata:/data
+      - ./certs/minio:/certs:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local || exit 0"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [appnet]
+
+  mc:
+    image: minio/mc:RELEASE.2024-10-13T13-34-11Z
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    networks: [appnet]
+
+volumes:
+  attachments:
+  miniodata:
