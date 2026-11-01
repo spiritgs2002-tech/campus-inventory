@@ -5,7 +5,7 @@
 > **裁决基线（2026-10-31）**：
 > - 技术栈维持项目宪法 `ARCHITECTURE.md`：**Django 5 + psycopg3 + PostgreSQL 16 + Celery/Redis + Django Templates / Alpine.js / HTMX / Bootstrap 5**。
 > - **明确排除**（本次裁决不适用）：FastAPI、Vue3、SQLite(WAL)、SwiftUI 桌面小组件。新指令中的 JWT / RBAC 设计思路已转化为 Django 形态（见 §4、§5）。
-> - 数据库基线：`schema-v7.sql`（27 表 / 14 函数 / 32 触发器，已于真实 PG16.15 实测 G0 通过）。
+> - 数据库基线：`schema-v7.sql`（30 表 / 14 函数 / 32 触发器，已于真实 PG16.15 实测 G0 通过）。
 
 ---
 
@@ -51,6 +51,9 @@ campus_inventory/                # 或 apps/asset/ 下的总务子域
 │   │                            #   adjustment_*, inventory,
 │   │                            #   stock_ledger, asset_cards, asset_events
 │   ├── attachments/             # attachments（对象存储元数据）
+│   ├── procurement/             # 请购（P8b）：requisition 模型、审批与入库联动
+│   ├── notifications/           # 站内通知（P8b）：notification 模型与铃铛角标
+│   ├── repair/                  # 报修工单（P8c）：repair_ticket 模型与派单
 │   └── reconcile/               # 包装 reconcile.sql 的管理命令
 └── shared/                      # 跨域复用
     ├── rbac/                    # 角色、权限、require_role
@@ -167,7 +170,7 @@ campus_inventory/                # 或 apps/asset/ 下的总务子域
 | 阶段 | 命令 / 脚本 | 通过标准 |
 |---|---|---|
 | CI-1 预检 | `precheck-sql.py` | 美元引号成对、语句终止，退出码 0 |
-| G0 建库 | 应用 `schema-v7.sql` | 单事务 COMMIT、0 报错；**27 表 / 14 函数 / 32 触发器**断言全等 |
+| G0 建库 | 应用 `schema-v7.sql` | 单事务 COMMIT、0 报错；**30 表 / 14 函数 / 32 触发器**断言全等 |
 | M1 授权 | `grant-runtime.sql` + `verify-runtime.sql` | 负向断言全过（否则阻断） |
 | 负向用例 | `test-negative.sql` | 21 项全 PASS |
 | 对账 | `reconcile.sql` | 13 项内部一致性（不替代实物抽盘） |
@@ -198,6 +201,12 @@ campus_inventory/                # 或 apps/asset/ 下的总务子域
 | **P5 库存与资产** | inventory 扣减、stock_ledger、asset_cards/asset_events、资产编号分配 | **硬** | 对账 13 项内一致 | §7、§9 对账 |
 | **P6 附件与隔离** | attachments 上传/关联/撤回、对象存储、4 通路隔离测试 | 软（贴 P4/P5） | 4 通路拒绝跨租户 | §8 |
 | **P7 收尾** | reconcile 命令、cleanup-sessions 任务、强制改密流程、文档 | **硬** | 全 CI 绿 | §9 |
+
+> **P8 增强（P8a / P8b / P8c，已交付并通过验收）**：在 P0–P7 验收通过后，按本规范同一契约持续扩展——
+> - **P8a 扫码领用 / 移动盘点 / 二维码标签**：复用 `inventory` 域，新增 `pickup.py` / `qr.py`（`items.qr_token` 经 SQL-first 增量 DDL + RunSQL 迁移，哈希闸门校验）；匿名轻量用户沿用 §4 双轨身份思路。
+> - **P8b 请购 + 站内通知**：新增 `apps/procurement`、`apps/notifications`；请购审批后入库**强制复用** `orders.create(inbound)` → `posting.receive`，不手写库存 UPDATE，保障 §7 对账 13 项不崩。
+> - **P8c 报修工单**：新增 `apps/repair`（`repair_repairticket` 表，模型 `managed=False`）；状态机 `pending→dispatched→repairing→done/cancelled`；与既有资产维修开关解耦。
+> - **契约延续**：SQL-first（DDL 手写 + 迁移哈希闸门）、运行/迁移身份分离、G0 同步（基线由 `27/14/32` 升至 `30/14/32`）、CI 门禁（`verify_p8a/b/c`）均严格遵循本规范，未引入偏离。
 
 ---
 

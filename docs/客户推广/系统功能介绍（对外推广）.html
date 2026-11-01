@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>校园总务 · 库存与资产管理系统 — 功能介绍</title>
+<style>
+  :root{
+    --brand:#1e6fd9; --brand-dark:#1452a8; --accent:#2bb673;
+    --ink:#1f2937; --sub:#5b6675; --line:#e6ebf2; --bg:#f5f8fc;
+    --card:#ffffff; --shadow:0 10px 30px rgba(20,82,168,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.75;-webkit-font-smoothing:antialiased}
+  a{color:var(--brand);text-decoration:none}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+
+  /* Hero */
+  .hero{background:linear-gradient(135deg,#1e6fd9 0%,#2b8bd6 55%,#2bb673 140%);color:#fff;padding:64px 0 72px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-80px;top:-80px;width:320px;height:320px;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%);border-radius:50%}
+  .hero .tag{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:5px 14px;border-radius:999px;font-size:13px;letter-spacing:.5px;margin-bottom:18px}
+  .hero h1{font-size:34px;line-height:1.3;font-weight:800;margin-bottom:14px}
+  .hero p{font-size:17px;opacity:.95;max-width:680px}
+  .hero .one{font-size:19px;font-weight:600;margin-top:24px;background:rgba(255,255,255,.14);display:inline-block;padding:10px 18px;border-radius:12px;border-left:4px solid #fff}
+
+  /* Sections */
+  section{padding:48px 0}
+  .sec-title{font-size:24px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+  .sec-title .bar{width:6px;height:24px;background:var(--brand);border-radius:3px}
+  .sec-sub{color:var(--sub);margin-bottom:26px;font-size:15px}
+
+  /* Pain table */
+  .pain{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+  .pain>div{padding:16px 18px;font-size:14.5px}
+  .pain .head{background:var(--ink);color:#fff;font-weight:700}
+  .pain .bad{background:#fff5f5;color:#b23b3b;border-top:1px solid var(--line);border-right:1px solid var(--line)}
+  .pain .good{background:#f3fbf6;color:#1f7a4d;border-top:1px solid var(--line)}
+
+  /* Feature grid */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .feat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow);transition:.2s}
+  .feat:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(20,82,168,.14)}
+  .feat .ic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,#eaf2ff,#e7f8ef);margin-bottom:14px}
+  .feat h3{font-size:17px;margin-bottom:8px}
+  .feat p{font-size:14px;color:var(--sub)}
+  .feat .num{float:right;font-size:13px;color:#b9c4d4;font-weight:700}
+
+  /* Security */
+  .secu{background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px 22px;box-shadow:var(--shadow)}
+  .secu li{list-style:none;padding:15px 0;border-bottom:1px dashed var(--line);display:flex;gap:12px;align-items:flex-start;font-size:14.5px}
+  .secu li:last-child{border-bottom:none}
+  .secu .ck{color:var(--accent);font-weight:800;flex:0 0 auto}
+
+  /* Day story */
+  .story{background:linear-gradient(135deg,#f0f6ff,#eefbf3);border:1px solid var(--line);border-radius:16px;padding:28px 30px;font-size:15.5px}
+  .story p{margin:10px 0;color:#33414f}
+  .story .hl{color:var(--brand);font-weight:700}
+  .story .end{margin-top:14px;font-weight:700;color:var(--ink)}
+
+  /* Tech points */
+  .tech{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .tech .t{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-size:14.5px;box-shadow:var(--shadow)}
+  .tech .t b{color:var(--brand)}
+
+  /* CTA */
+  .cta{background:var(--brand-dark);color:#fff;border-radius:16px;padding:38px 30px;text-align:center}
+  .cta h2{font-size:23px;margin-bottom:10px}
+  .cta p{opacity:.92;margin-bottom:22px}
+  .btn{display:inline-block;background:#fff;color:var(--brand-dark);font-weight:700;padding:13px 30px;border-radius:999px;font-size:16px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+
+  footer{padding:30px 0 50px;text-align:center;color:#9aa6b5;font-size:13px}
+  footer .note{max-width:680px;margin:0 auto}
+
+  @media(max-width:720px){
+    .hero h1{font-size:26px}
+    .pain,.grid,.tech{grid-template-columns:1fr}
+    .pain .bad{border-right:none}
+    section{padding:36px 0}
+  }
+</style>
+</head>
+<body>
+
+  <header class="hero">
+    <div class="wrap">
+      <span class="tag">校园总务数字化 · 私有化部署</span>
+      <h1>校园总务 · 库存与资产管理系统</h1>
+      <p>把学校总务处"物资进了哪、谁领了什么、缺了怎么买、坏了怎么修"全部搬上系统——让管理可追溯，让师生少跑腿。</p>
+      <div class="one">📦 物资可查 · 领用可溯 · 请购可批 · 维修可跟</div>
+    </div>
+  </header>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-title"><span class="bar"></span>您正面临的麻烦，系统怎么解决</div>
+      <div class="sec-sub">从纸质台账到数字化闭环，每一项痛点都有对应解法。</div>
+      <div class="pain">
+        <div class="head">传统做法的麻烦</div>
+        <div class="head">系统带来的改变</div>
+        <div class="bad">领用靠纸质签字、月底对账费时</div>
+        <div class="good">领用线上登记、库存实时更新、台账自动生成</div>
+        <div class="bad">不知道仓库还有多少、该不该买</div>
+        <div class="good">库存不足自动提示；教师可直接发起请购</div>
+        <div class="bad">资产卡片散落、盘点靠纸面</div>
+        <div class="good">固定资产一卡一档、二维码标签、扫码即查</div>
+        <div class="bad">物品坏了口头报修、进度没下文</div>
+        <div class="good">在线报修工单、派单处理、进度可查</div>
+        <div class="bad">敏感信息（学生/联系人）容易泄露</div>
+        <div class="good">数据按校隔离、敏感字段加密、权限分明</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="wrap">
+      <div class="sec-title"><span class="bar"></span>功能全景</div>
+      <div class="sec-sub">覆盖基础数据、库存资产、业务单据、扫码领用、请购审批、报修工单的完整闭环。</div>
+      <div class="grid">
+        <div class="feat"><span class="num">01</span><div class="ic">🗂️</div><h3>基础数据统一管理</h3><p>部门、人员、物资分类、物资、库位、供应商一次录入全校共用；记录停用而非删除，历史全程可追溯。</p></div>
+        <div class="feat"><span class="num">02</span><div class="ic">📊</div><h3>库存与固定资产</h3><p>耗材实时可用量、库位、批次一目了然；固定资产一卡一档、责任到人，资产号与二维码随机生成。</p></div>
+        <div class="feat"><span class="num">03</span><div class="ic">🧾</div><h3>业务单据全流程</h3><p>入库 / 出库 / 报损 / 调整四类单据，申请→审批→执行受控流转；每张单据带幂等键，重复提交不重复记账。</p></div>
+        <div class="feat"><span class="num">04</span><div class="ic">📷</div><h3>扫码领用（核心亮点）</h3><p>教师用微信或手机相机扫物资二维码，一键确认即完成领用；无需登录也可轻量领取，防刷、防冒领。</p></div>
+        <div class="feat"><span class="num">05</span><div class="ic">📱</div><h3>移动查库存</h3><p>手机浏览器随时查看物资库存与"有货 / 不足"提示，不必守在电脑前。</p></div>
+        <div class="feat"><span class="num">06</span><div class="ic">🏷️</div><h3>二维码标签</h3><p>管理员一键为物资生成二维码标签（PNG），打印张贴，供扫码领用与盘点使用。</p></div>
+        <div class="feat"><span class="num">07</span><div class="ic">🛒</div><h3>请购与审批</h3><p>教师在线提交请购，总务主任在线批准 / 驳回；批准后采购入库，库存自动增加并自动通知申请人。</p></div>
+        <div class="feat"><span class="num">08</span><div class="ic">🔔</div><h3>站内通知</h3><p>审批结果、到货入库等关键节点自动推送站内消息（导航栏铃铛未读提示），可标记已读。</p></div>
+        <div class="feat"><span class="num">09</span><div class="ic">🔧</div><h3>报修工单</h3><p>师生在线报修（对象、描述、优先级、照片），派单→维修→完成 / 取消全程记录，进度随时可查。</p></div>
+        <div class="feat"><span class="num">10</span><div class="ic">🛡️</div><h3>证据附件与审计</h3><p>处置单图片 / PDF 可上传、关联、撤回、保全；私有加密存储，保留期可配置，满足审计留痕。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-title"><span class="bar"></span>安全与合规（给您一颗定心丸）</div>
+      <div class="sec-sub">面向学校场景设计，隐私保护与权限管控是底层能力而非附加项。</div>
+      <ul class="secu">
+        <li><span class="ck">✓</span><span><b>数据隔离</b>：每所学校数据独立隔离，互不越界。</span></li>
+        <li><span class="ck">✓</span><span><b>敏感信息加密</b>：供应商联系人等敏感字段应用层加密，仅授权角色可见。</span></li>
+        <li><span class="ck">✓</span><span><b>角色权限分明</b>：管理员 / 普通用户分级，审批禁止自批并留审计。</span></li>
+        <li><span class="ck">✓</span><span><b>会话族机制</b>：改密、禁用、重置密码即全局登出，防止账号蹭用。</span></li>
+        <li><span class="ck">✓</span><span><b>防护到位</b>：登录限流、防重放、严格 CSP 策略，抵御常见攻击。</span></li>
+        <li><span class="ck">✓</span><span><b>内置对账</b>：13 项一致性校验，账目长期可信。</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="wrap">
+      <div class="sec-title"><span class="bar"></span>一个典型的工作日</div>
+      <div class="sec-sub">从早到晚，每一笔操作都有据可查。</div>
+      <div class="story">
+        <p>🌅 早上，总务处打印好新到物资的二维码标签并张贴；</p>
+        <p>📦 上午，李老师扫码领走两盒打印纸，<span class="hl">库存实时减少</span>；</p>
+        <p>✍️ 中午，王老师发现粉笔不够，提交一份请购；</p>
+        <p>✅ 主任午休时用手机审批通过，管理员下午采购入库，系统<span class="hl">自动通知</span>王老师来领；</p>
+        <p>🔧 下午，某班门锁损坏，学生在系统提交报修工单，总务处派单维修并标记完成。</p>
+        <p class="end">全天每一笔操作，都有据可查。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-title"><span class="bar"></span>技术特点（给 IT 同事）</div>
+      <div class="sec-sub">成熟、自主可控、可交付可运维。</div>
+      <div class="tech">
+        <div class="t"><b>成熟稳定</b>：Python / Django + PostgreSQL + Redis 技术栈；前端响应式，电脑与手机都能用。</div>
+        <div class="t"><b>自主可控</b>：支持私有化部署（云服务器或单位内网），数据掌握在自己手里。</div>
+        <div class="t"><b>可交付可运维</b>：提供部署手册与上线验证流程，支持平滑迁移、备份与回滚。</div>
+        <div class="t"><b>质量保障</b>：已在真实 PostgreSQL 16 环境通过完整自动化测试（266 项）与多项集成校验。</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="cta">
+        <h2>想用您学校的真实场景跑一遍？</h2>
+        <p>欢迎联系我们安排演示与试用。操作细节见《使用手册》，部署上线见《云端部署与上线测试执行手册》。</p>
+        <a class="btn" href="#">预约演示 / 索取试用</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <p class="note">本文档描述的是系统当前版本的功能集合，供对外推广介绍使用。最终功能以实际部署版本为准。</p>
+      <p style="margin-top:10px">© 校园总务数字化 · 库存与资产管理系统</p>
+    </div>
+  </footer>
+
+</body>
+</html>
