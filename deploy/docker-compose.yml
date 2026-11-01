@@ -14,12 +14,14 @@ services:
     image: postgres:16.15
     environment:
       POSTGRES_DB: ${DB_NAME:-campus_inventory}
-      POSTGRES_USER: ${DB_USER:-inventory_app}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+      # 固定为迁移 owner（compose 内 PG 初始超级用户）；切勿随 .env 的 DB_USER 变化，
+      # 否则运行时服务会误以迁移身份连库，触发 require_runtime 拦截（/health/ready/ 503）。
+      POSTGRES_USER: inventory_app
+      POSTGRES_PASSWORD: ${MIGRATION_DB_PASSWORD:?MIGRATION_DB_PASSWORD required}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-inventory_app} -d ${DB_NAME:-campus_inventory}"]
+      test: ["CMD-SHELL", "pg_isready -U inventory_app -d ${DB_NAME:-campus_inventory}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -45,6 +47,10 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: "5432"
+      # 运行身份固定为 inv_run（inventory_runtime 成员）；覆盖 .env 的 DB_USER，
+      # 避免以迁移身份 inventory_app 连库被 require_runtime 拦截。
+      DB_USER: inv_run
+      DB_PASSWORD: ${RUN_DB_PASSWORD:?RUN_DB_PASSWORD required}
       REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
@@ -69,6 +75,10 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: "5432"
+      # 运行身份固定为 inv_run（inventory_runtime 成员）；覆盖 .env 的 DB_USER，
+      # 避免以迁移身份 inventory_app 连库被 require_runtime 拦截。
+      DB_USER: inv_run
+      DB_PASSWORD: ${RUN_DB_PASSWORD:?RUN_DB_PASSWORD required}
       REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
@@ -87,6 +97,10 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: "5432"
+      # 运行身份固定为 inv_run（inventory_runtime 成员）；覆盖 .env 的 DB_USER，
+      # 避免以迁移身份 inventory_app 连库被 require_runtime 拦截。
+      DB_USER: inv_run
+      DB_PASSWORD: ${RUN_DB_PASSWORD:?RUN_DB_PASSWORD required}
       REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
