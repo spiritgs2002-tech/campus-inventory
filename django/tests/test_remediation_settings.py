@@ -50,3 +50,21 @@ class RemediationSettingsTests(SimpleTestCase):
         self.assertEqual(
             json.loads(result.stdout)["proxy"], ["HTTP_X_FORWARDED_PROTO", "https"]
         )
+
+
+class ProxyTrustCheckTests(SimpleTestCase):
+    def run_check(self, debug, env):
+        from unittest.mock import patch
+        from django.test import override_settings
+        from apps.core.checks import proxy_trust_is_explicit
+
+        with override_settings(DEBUG=debug), patch.dict(os.environ, env, clear=False):
+            if "TRUST_X_FORWARDED_PROTO" not in env:
+                os.environ.pop("TRUST_X_FORWARDED_PROTO", None)
+            return [w.id for w in proxy_trust_is_explicit(None)]
+
+    def test_warns_only_in_production_when_unset(self):
+        self.assertEqual(self.run_check(False, {}), ["campus.W001"])
+        self.assertEqual(self.run_check(False, {"TRUST_X_FORWARDED_PROTO": "false"}), [])
+        self.assertEqual(self.run_check(False, {"TRUST_X_FORWARDED_PROTO": "true"}), [])
+        self.assertEqual(self.run_check(True, {}), [])

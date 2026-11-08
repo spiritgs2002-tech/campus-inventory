@@ -75,11 +75,6 @@ DATABASES = {
         "HOST": os.environ.get("DB_HOST", "localhost"),
         "PORT": os.environ.get("DB_PORT", "5432"),
         "CONN_MAX_AGE": 60,
-        # CI 预建测试库并以运行身份复用：指定测试库名后配合 --keepdb 直连，
-        # 避免测试运行身份需要 CREATEDB（会触发 require_runtime 拒绝）。
-        "TEST": {
-            "NAME": os.environ.get("TEST_DB_NAME") or None,
-        },
         "ATOMIC_REQUESTS": True,
         "OPTIONS": {
             "connect_timeout": 5,
