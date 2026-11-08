@@ -132,6 +132,7 @@ def repair_submit(principal, payload, key, *, file=None):
     with transaction.atomic():
         tenant = Tenant.objects.select_for_update(no_key=True).get(pk=tenant_id)
         pickup.tenant_available(tenant)
+        pickup.anonymous_enabled(tenant.pk)
         p = pickup.ensure_lightweight_user(tenant_id, data["name"], data["employee_no"])
         return _submit(p, data, key, None, None, True)
 
@@ -148,6 +149,7 @@ def _submit(p, data, key, file, evidence, anonymous):
             pickup._anonymous_context(p, lambda: [])
             if anonymous_target(data) != p.tenant_id:
                 raise BusinessError("FORBIDDEN", "二维码学校已变化", 403)
+            pickup.anonymous_quota(p, OPERATION)
         else:
             core.lock_order_context(p, lambda: [])
         _target(p.tenant_id, data)

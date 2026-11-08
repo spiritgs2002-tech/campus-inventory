@@ -39,7 +39,9 @@ export RUN_DB_PASSWORD=$(python3 -c "import secrets;print(secrets.token_urlsafe(
 - `REDIS_URL=redis://<host>:6379/0`（CELERY broker/result 同源）
 - `SECRET_KEY` / `AUTH_SIGNING_KEY` / `PII_ENCRYPTION_KEYS`
 - `ATTACHMENT_STORAGE_BACKEND=s3` / `ATTACHMENT_S3_BUCKET` / `ATTACHMENT_S3_REGION` / `ATTACHMENT_S3_ENDPOINT`
-- `PICKUP_ANONYMOUS_PER_MINUTE=60`（匿名免密领用限流，按校情调）
+- `PICKUP_ANONYMOUS_PER_MINUTE=60`（每校每类免密操作每分钟上限，按校情调）
+- `ANONYMOUS_SCAN_TENANTS`（免密扫码开关：`*` 全开 / 空值全关 / 租户 ID 列表）；`PICKUP_ANONYMOUS_MAX_QTY`、`ANONYMOUS_PER_EMPLOYEE_PER_HOUR`、`ANONYMOUS_NEW_IDENTITIES_PER_HOUR` 按校情调
+- `TRUST_X_FORWARDED_PROTO=true`（仅在 nginx/CLB 前置时；compose 已为 web 固定开启）
 - `CSRF_TRUSTED_ORIGINS=https://your-domain`
 
 **A.3 建库 + 两角色（用迁移身份 `inventory_app` 连接）**
@@ -112,13 +114,13 @@ export RUN_DB_PASSWORD=$(python3 -c "import secrets;print(secrets.token_urlsafe(
 **拍板前必须全绿**：
 - [ ] 阶段 A–F 全部打勾；`/health/ready/` 与 `/health/live/` 均 200。
 - [ ] 密钥未入库、角色分离生效（运行身份无 CREATEDB/CREATEROLE、迁移身份不作为 web 运行身份）。
-- [ ] G0=(30,14,32) 三处一致 + 指纹自洽；266 tests OK；verify_p1–p8c 全过。
-- [ ] 备份就绪：`pg_dump` 全量 + 桶版本化开启；回滚脚本 / 镜像标签固化。
+- [ ] G0=(30,14,32) 三处一致 + 指纹自洽；`manage.py test tests` 全量通过（以当次 CI 输出的用例数为准）；verify_p1–p8c 全过。
+- [ ] 备份就绪：`pg_dump` 全量 + 证据桶按 P7 要求**保持从未启用版本控制**（`Enabled`/`Suspended` 均会令证据清理拒绝运行），对象备份改用跨桶复制或定期离线同步；镜像标签固化。
 
 **回滚预案**：
 - 应用回滚：compose 切回上一镜像标签 / systemd 重启旧版 artifact。
-- 数据回滚：迁移可逆（SQL-first 增量均带 DOWN 或幂等回滚）；恢复最近 `pg_dump`；对象存储靠版本化恢复。
-- 紧急熔断：`MAINTENANCE_ENABLED=true` 进入维护页（需 DEBUG 且仅限测试间隔，详见 `settings.py`）。
+- 数据回滚：SQL-first 迁移**不可逆**（`RunSQLFile.database_backwards` 显式抛出 IrreversibleError，增量 SQL 不带 DOWN），回滚只能恢复上线前校验过的 `pg_dump`；对象存储从上述跨桶副本/离线同步恢复，不依赖桶版本化。
+- 紧急熔断：应用**没有维护页开关**（`MAINTENANCE_ENABLED` 只控制 P7 自动清理/对账调度，设为 `false` 并重启 worker/beat 可停止清理）。如需对外停服，在 nginx 层返回维护页或停止 web 服务；需要关闭扫码免密入口时设置 `ANONYMOUS_SCAN_TENANTS=` 后重启 web。
 
 ---
 

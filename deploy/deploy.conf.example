@@ -14,6 +14,10 @@ ADMIN_USER=admin
 # 数据库名（默认即可）
 DB_NAME=campus_inventory
 
+# 扫码免密登记（领用/请购/报修，姓名工号未核验；免密领用会直接出库）
+# 默认 *（开启）；不需要时设为空值关闭：ANONYMOUS_SCAN_TENANTS=
+# ANONYMOUS_SCAN_TENANTS=*
+
 # 对象存储：minio（默认，校内自托管，数据不出校）或 s3（外部云）
 STORAGE_MODE=minio
 

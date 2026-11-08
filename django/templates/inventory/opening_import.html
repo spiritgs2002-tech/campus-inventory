@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% block content %}<section><h1 class="h3">期初库存导入</h1>
+<p>上传 CSV（UTF-8 或 GBK，最多 1000 行、1MiB；更多数据请拆分为多个文件依次导入），列为：物资编码、库位、数量，可选质量（可用/损坏，默认可用）、单价。<a href="/inbound/import/template.csv" download>下载模板</a></p>
+<p class="muted">物资与库位须已在目录中建立并启用；固定资产按数量逐件生成资产卡。先“预检”会完整执行一遍入库校验后回滚，确认无误再“正式导入”。正式导入生成“期初”类型入库单，整份文件要么全部入账，要么全部不入账；入库单不可取消，差额须走盘点调整。</p>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+{% if summary %}<div class="card card-body my-3">
+{% if summary.error_rows %}<p class="error">共 {{ summary.rows }} 行，其中 {{ summary.error_rows }} 行有误，未写入任何数据：</p><ul>{% for row in summary.errors %}<li>第 {{ row.line }} 行：{{ row.errors|join:"；" }}</li>{% endfor %}</ul>{% if summary.error_rows > summary.errors|length %}<p>仅显示前 {{ summary.errors|length }} 行错误。</p>{% endif %}
+{% elif summary.preview %}<p>预检通过：{{ summary.valid_rows }} 行，将生成 {{ summary.orders|length }} 张期初入库单。本次未写入数据。</p>
+{% else %}<p>导入完成：{{ summary.valid_rows }} 行，生成 {{ summary.orders|length }} 张期初入库单{% if summary.replayed %}（重复提交，返回原结果）{% endif %}：{% for order in summary.orders %}<a href="/inbound/{{ order.id }}/">#{{ order.id }}</a> {% endfor %}</p>{% endif %}
+</div>{% endif %}
+<form method="post" enctype="multipart/form-data" class="card card-body" hx-boost="false">{% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ key }}">
+<label>CSV 文件<input type="file" name="file" accept=".csv,text/csv" required></label>
+<div><button class="btn btn-secondary" name="mode" value="preview">预检</button> <button class="btn btn-primary" name="mode" value="commit">正式导入</button></div></form></section>{% endblock %}

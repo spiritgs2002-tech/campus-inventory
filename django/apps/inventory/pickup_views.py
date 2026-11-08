@@ -48,6 +48,7 @@ def pickup_context(request, token, p):
         "token": token,
         "name": obj.item.name if kind == "asset" else obj.name,
         "school_name": obj.tenant.name,
+        "tenant_id": obj.tenant_id,
         "code": obj.asset_no if kind == "asset" else obj.code,
         "unit": "件" if kind == "asset" else obj.unit,
         "form": pickup.PickupForm(),
@@ -88,6 +89,12 @@ def html_pickup(request, token):
                 raise
             p, blocked = getattr(request, "principal", None), error
         context = pickup_context(request, token, p)
+        if p is None and blocked is None:
+            try:
+                pickup.anonymous_enabled(context.pop("tenant_id"))
+            except BusinessError as error:
+                blocked = error
+        context.pop("tenant_id", None)
         if blocked:
             context.update(
                 login_blocked=True,

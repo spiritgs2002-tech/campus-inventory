@@ -1,7 +1,8 @@
 import json
+import logging
 from uuid import uuid4
 from django import forms
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.middleware.csrf import CsrfViewMiddleware
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
@@ -10,7 +11,9 @@ from apps.core.auth_views import error_response
 from apps.core.models import User
 from shared.errors import BusinessError
 from shared.rbac.permission import require_role
-from . import assets, queries
+from . import assets, exports, opening_import, queries
+
+logger = logging.getLogger(__name__)
 
 LABELS = {"stock": "耗材库存", "ledger": "库存流水", "assets": "固定资产"}
 
@@ -182,3 +185,65 @@ def html_repair(request, pk, action):
         return render(request, "inventory/page.html", context, status=status)
     except BusinessError as error:
         return error_response(error)
+
+
+@require_role("admin")
+def html_export(request, resource):
+    """GET CSV export for administrators; same filters as the list page."""
+    if request.method != "GET":
+        return JsonResponse({"error": "METHOD_NOT_ALLOWED"}, status=405)
+    try:
+        body, filename, count = exports.export_csv(
+            request.principal, resource, request.GET
+        )
+    except BusinessError as error:
+        return error_response(error)
+    logger.info(
+        "inventory export tenant=%s user=%s resource=%s rows=%s",
+        request.principal.tenant_id,
+        request.principal.user_id,
+        resource,
+        count,
+    )
+    response = HttpResponse(body, content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response["Cache-Control"] = "private, no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@require_role("admin")
+def html_opening_import(request, template=False):
+    """Administrator upload of the opening-balance CSV (preview or commit)."""
+    if template:
+        response = HttpResponse(
+            "﻿" + opening_import.TEMPLATE, content_type="text/csv; charset=utf-8"
+        )
+        response["Content-Disposition"] = 'attachment; filename="opening-template.csv"'
+        return response
+    if request.method not in {"GET", "POST"}:
+        return JsonResponse({"error": "METHOD_NOT_ALLOWED"}, status=405)
+    context = {"principal": request.principal, "key": uuid4().hex, "summary": None}
+    status = 200
+    if request.method == "POST":
+        upload = request.FILES.get("file")
+        context["key"] = request.POST.get("idempotency_key") or context["key"]
+        try:
+            if upload is None or len(request.FILES.getlist("file")) != 1:
+                raise BusinessError("FILE_REQUIRED", "请上传一个CSV文件", 422)
+            if upload.size > opening_import.MAX_BYTES:
+                raise BusinessError("FILE_TOO_LARGE", "期初文件不能超过1MiB", 422)
+            preview = request.POST.get("mode") != "commit"
+            context["summary"] = opening_import.run(
+                request.principal, upload.read(), context["key"], preview=preview
+            )
+            if context["summary"]["error_rows"]:
+                status = 422
+            elif not preview:
+                context["key"] = uuid4().hex
+        except BusinessError as error:
+            context["error"] = error.message
+            status = error.status
+    response = render(request, "inventory/opening_import.html", context, status=status)
+    response["Cache-Control"] = "private, no-store"
+    return response

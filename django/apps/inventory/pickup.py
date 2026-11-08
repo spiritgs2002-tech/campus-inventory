@@ -78,9 +78,62 @@ def validate_payload(payload, kind):
     return data
 
 
-def ensure_lightweight_user(tenant_id, name, employee_no):
+def anonymous_enabled(tenant_id):
+    """Self-declared identity flows must be explicitly allowed for the school."""
+    allowed = settings.ANONYMOUS_SCAN_TENANTS
+    if allowed != "*" and tenant_id not in allowed:
+        raise BusinessError(
+            "ANONYMOUS_SCAN_DISABLED", "本校未开启免密扫码登记，请先登录", 401
+        )
+
+
+def anonymous_quota(p, operation):
+    """Caller owns the tenant lock; counts committed unverified operations only."""
+    now = timezone.now()
+    unverified = OperationRequest.objects.filter(
+        tenant_id=p.tenant_id,
+        operation=operation,
+        actor__password_hash__startswith=UNVERIFIED,
+        # The in-flight placeholder of this very request has no response yet.
+        response__isnull=False,
+    )
+    if (
+        unverified.filter(
+            actor_id=p.user_id, completed_at__gte=now - timedelta(hours=1)
+        ).count()
+        >= settings.ANONYMOUS_PER_EMPLOYEE_PER_HOUR
+    ):
+        raise BusinessError(
+            "ANONYMOUS_EMPLOYEE_RATE_LIMITED",
+            "该工号免密登记次数过多，请稍后重试或登录办理",
+            429,
+        )
+    if (
+        unverified.filter(completed_at__gte=now - timedelta(minutes=1)).count()
+        >= settings.PICKUP_ANONYMOUS_PER_MINUTE
+    ):
+        raise BusinessError(
+            "PICKUP_RATE_LIMITED",
+            "学校免密登记请求较多，请稍后重试或登录办理",
+            429,
+        )
+
+
+def ensure_lightweight_user(tenant_id, name, employee_no, *, limit_new=True):
     """Caller owns the tenant lock; formal/disabled identities are never reused."""
     user = User.objects.filter(tenant_id=tenant_id, username=employee_no).first()
+    if user is None and limit_new:
+        recent = User.objects.filter(
+            tenant_id=tenant_id,
+            password_hash__startswith=UNVERIFIED,
+            created_at__gte=timezone.now() - timedelta(hours=1),
+        ).count()
+        if recent >= settings.ANONYMOUS_NEW_IDENTITIES_PER_HOUR:
+            raise BusinessError(
+                "ANONYMOUS_IDENTITY_RATE_LIMITED",
+                "近期新登记的免密工号过多，请稍后重试或登录办理",
+                429,
+            )
     if user is None:
         user = User.objects.create(
             tenant_id=tenant_id,
@@ -116,6 +169,7 @@ def tenant_available(tenant):
 def _anonymous_context(p, discover):
     tenant = Tenant.objects.select_for_update(no_key=True).get(pk=p.tenant_id)
     tenant_available(tenant)
+    anonymous_enabled(tenant.pk)
     ids = {p.user_id, *discover()}
     users = {
         u.pk: u
@@ -145,6 +199,12 @@ def pickup_issue(principal, token, quantity, recipient_id, key):
         raise BusinessError("FORBIDDEN", "扫码仅限本人领取", 403)
     kind, target = queries.resolve_scan(token, tenant_id=p.tenant_id)
     quantity = validate_payload({"quantity": quantity}, kind)["quantity"]
+    if anonymous and quantity > settings.PICKUP_ANONYMOUS_MAX_QTY:
+        raise BusinessError(
+            "ANONYMOUS_QUANTITY_LIMIT",
+            f"免密领用单次最多{settings.PICKUP_ANONYMOUS_MAX_QTY}，更多请登录领取",
+            422,
+        )
     source_rows = [{"asset_card_id": target.pk}] if kind == "asset" else []
     digest = {
         "token": token,
@@ -175,18 +235,7 @@ def pickup_issue(principal, token, quantity, recipient_id, key):
             ),
         }
         if anonymous:
-            recent = OperationRequest.objects.filter(
-                tenant_id=p.tenant_id,
-                operation=OPERATION,
-                completed_at__gte=timezone.now() - timedelta(minutes=1),
-                response__pickup__identity="unverified",
-            ).count()
-            if recent >= settings.PICKUP_ANONYMOUS_PER_MINUTE:
-                raise BusinessError(
-                    "PICKUP_RATE_LIMITED",
-                    "学校免密登记请求较多，请稍后重试或登录领取",
-                    429,
-                )
+            anonymous_quota(current, OPERATION)
         header = OutboundOrder.objects.create(
             tenant_id=p.tenant_id,
             order_no="PK-" + uuid4().hex,
@@ -332,5 +381,6 @@ def submit(principal, token, payload, key):
     with transaction.atomic():
         tenant = Tenant.objects.select_for_update(no_key=True).get(pk=obj.tenant_id)
         tenant_available(tenant)
+        anonymous_enabled(tenant.pk)
         p = ensure_lightweight_user(obj.tenant_id, data["name"], data["employee_no"])
         return pickup_issue(p, token, data["quantity"], p.user_id, key)

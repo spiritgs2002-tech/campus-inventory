@@ -6,7 +6,7 @@
 <script defer src="{% static 'vendor/htmx.min.js' %}"></script><script defer src="{% static 'vendor/alpine-csp.min.js' %}"></script><script defer src="{% static 'app.js' %}"></script>
 </head><body><header class="border-bottom bg-white"><nav class="navbar container"><a class="navbar-brand" href="/catalog/items/">校园总务</a>
 <div class="d-flex gap-3 flex-wrap"><a href="/catalog/items/">物资</a><a href="/catalog/categories/">分类</a><a href="/catalog/locations/">库位</a><a href="/catalog/suppliers/">供应商</a>
-<a href="/outbound/">领用</a><a href="/scrap/">处置</a>{% if principal.role == 'admin' %}<a href="/inbound/">入库</a><a href="/adjustment/">调整</a>{% endif %}
+<a href="/outbound/">领用</a><a href="/scrap/">处置</a>{% if principal.role == 'admin' %}<a href="/inbound/">入库</a><a href="/inbound/import/">期初导入</a><a href="/adjustment/">调整</a>{% endif %}
 <a href="/stock/">库存</a><a href="/assets/">资产</a>
 <a href="/s/inventory/">移动库存</a>{% if principal.role == 'admin' %}<a href="/s/labels/">二维码标签</a>{% endif %}
 <a href="/attachments/">附件</a>

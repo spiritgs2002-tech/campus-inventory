@@ -104,7 +104,7 @@ def shortage(amount, minimum):
     return amount <= 0 or amount < (minimum or Decimal(0))
 
 
-def stock(principal, params):
+def stock(principal, params, *, paginate=None):
     p = orders.identity(principal)
     allowed = {"q", "item_id", "low"}
     if p.role == "admin":
@@ -175,10 +175,10 @@ def stock(principal, params):
             }
 
         rows = rows.order_by("id")
-    return page(rows, data["page"], serialize), form
+    return (paginate or page)(rows, data["page"], serialize), form
 
 
-def ledger(principal, params):
+def ledger(principal, params, *, paginate=None):
     p = orders.identity(principal)
     if p.role != "admin":
         raise BusinessError("FORBIDDEN", "完整流水仅限管理员", 403)
@@ -205,7 +205,7 @@ def ledger(principal, params):
             "quality_label": QUALITY[row.quality],
         }
 
-    return page(rows.order_by("-id"), data["page"], serialize), form
+    return (paginate or page)(rows.order_by("-id"), data["page"], serialize), form
 
 
 def asset_queryset(principal):
@@ -243,7 +243,7 @@ def asset_record(p, row, *, detail=False):
     return result
 
 
-def assets(principal, params):
+def assets(principal, params, *, paginate=None):
     p = orders.identity(principal)
     fields = {"q", "item_id", "status"}
     if p.role == "admin":
@@ -264,7 +264,7 @@ def assets(principal, params):
             | Q(item__name__icontains=data["q"])
             | Q(item__code__icontains=data["q"])
         )
-    return page(
+    return (paginate or page)(
         rows.order_by("id"), data["page"], lambda row: asset_record(p, row)
     ), form
 

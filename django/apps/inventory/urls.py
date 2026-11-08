@@ -1,9 +1,20 @@
 from django.urls import path
 from .order_views import api_orders, api_observe, html_orders
-from .read_views import api_read, api_repair, html_read, html_repair
+from .read_views import (
+    api_read,
+    api_repair,
+    html_export,
+    html_opening_import,
+    html_read,
+    html_repair,
+)
 from . import pickup_views
 
-urlpatterns = [path("api/v1/inventory/observe/", api_observe)]
+urlpatterns = [
+    path("api/v1/inventory/observe/", api_observe),
+    path("inbound/import/", html_opening_import),
+    path("inbound/import/template.csv", html_opening_import, {"template": True}),
+]
 urlpatterns += [
     path("s/pickup/<slug:token>/", pickup_views.html_pickup, name="pickup"),
     path("api/v1/pickup/<slug:token>/", pickup_views.api_pickup, name="api-pickup"),
@@ -17,6 +28,7 @@ for resource, route in [
     ("assets", "assets"),
 ]:
     urlpatterns += [
+        path(f"{route}/export.csv", html_export, {"resource": resource}),
         path(f"{route}/", html_read, {"resource": resource}),
         path(f"api/v1/{route}/", api_read, {"resource": resource}),
     ]

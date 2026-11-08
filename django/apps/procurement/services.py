@@ -12,6 +12,8 @@ from shared.errors import BusinessError
 from shared.idempotency.service import execute, validate_key
 from .models import Requisition
 
+OPERATION = "procurement.requisition.create"
+
 
 class SubmitForm(forms.Form):
     item_id = forms.IntegerField(min_value=1)
@@ -49,6 +51,7 @@ def requisition_submit(principal, payload, key):
         with transaction.atomic():
             tenant = Tenant.objects.select_for_update(no_key=True).get(pk=obj.tenant_id)
             pickup.tenant_available(tenant)
+            pickup.anonymous_enabled(tenant.pk)
             anon = pickup.ensure_lightweight_user(
                 tenant.pk, data["name"], data["employee_no"]
             )
@@ -64,6 +67,7 @@ def _submit(p, data, key, anonymous):
     def work():
         if anonymous:
             pickup._anonymous_context(p, lambda: [])
+            pickup.anonymous_quota(p, OPERATION)
         else:
             core.lock_order_context(p, lambda: [])
         if not Item.objects.filter(
@@ -93,9 +97,7 @@ def _submit(p, data, key, anonymous):
             "business_refs": [{"type": "requisition", "id": row.pk}],
         }
 
-    return execute(
-        p.tenant_id, p.user_id, "procurement.requisition.create", key, digest, work
-    )
+    return execute(p.tenant_id, p.user_id, OPERATION, key, digest, work)
 
 
 def _admin(principal):

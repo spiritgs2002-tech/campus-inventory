@@ -9,6 +9,8 @@ from django.views.decorators.http import require_http_methods
 from apps.inventory.pickup_views import scan_principal
 from apps.core.auth_views import error_response
 from apps.catalog.models import Item
+from apps.core.models import User
+from apps.inventory.pickup import UNVERIFIED
 from shared.db.runtime import require_runtime
 from shared.errors import BusinessError
 from shared.rbac.permission import require_role
@@ -110,10 +112,28 @@ def html_list(request, admin=False):
     if status:
         rows = rows.filter(status=status)
     page = Paginator(rows.order_by("-id"), 25).get_page(request.GET.get("page"))
+    # Unverified QR applicants cannot log in, so in-app notices stay unread until
+    # an administrator sets an initial password for that employee number.
+    unverified = (
+        set(
+            User.objects.filter(
+                tenant_id=request.principal.tenant_id,
+                pk__in={row.applicant_id for row in page.object_list},
+                password_hash__startswith=UNVERIFIED,
+            ).values_list("pk", flat=True)
+        )
+        if request.principal.role == "admin"
+        else set()
+    )
     return render(
         request,
         "procurement/list.html",
-        dict(principal=request.principal, page=page, key=uuid4().hex),
+        dict(
+            principal=request.principal,
+            page=page,
+            key=uuid4().hex,
+            unverified=unverified,
+        ),
     )
 
 
