@@ -26,8 +26,6 @@ jobs:
       DB_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-ci-only
       # DBA connection for disposable verify scripts; never apply schema here.
       DB_NAME: postgres
-      # 测试库名：被测试运行身份(inventory_ci)复用，避免需要 CREATEDB（会触发 require_runtime 拒绝）。
-      TEST_DB_NAME: test_campus_inventory
     steps:
       - uses: actions/checkout@v4
       - name: Locate application
@@ -80,11 +78,20 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends redis-server
       - run: uv run python scripts/verify_p6.py
         working-directory: ${{ env.APP_DIR }}
+      - run: uv run python scripts/verify_p7.py
+        working-directory: ${{ env.APP_DIR }}
+      - run: uv run python scripts/verify_p8a.py
+        working-directory: ${{ env.APP_DIR }}
+      - run: uv run python scripts/verify_p8b.py
+        working-directory: ${{ env.APP_DIR }}
+      - run: uv run python scripts/verify_p8c.py
+        working-directory: ${{ env.APP_DIR }}
       - name: Create dedicated Django suite baseline database
         working-directory: ${{ env.APP_DIR }}
         run: |
           uv run python - <<'PY'
-          import os, psycopg
+          import os
+          import psycopg
           with psycopg.connect(
               host=os.environ["DB_HOST"], port=os.environ["DB_PORT"],
               user=os.environ["DB_USER"], password=os.environ["DB_PASSWORD"],
@@ -97,75 +104,26 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         env:
           DB_NAME: campus_inventory
-      # ---------------------------------------------------------------------------
-      # CI 测试身份调整：
-      #   现有代码强制 require_runtime()——业务命令/服务必须以“普通运行身份”
-      #   (inventory_runtime 成员) 执行，拒绝超户/有 CREATEDB 的角色。
-      #   原 CI 用 postgres 超户跑 manage.py test，会导致所有运行身份守卫
-      #   （import_repairs、notify、procurement、reconcile、pickup、auth…）直接失败。
-      #   修复：建 inventory_ci（inventory_runtime 成员、无 CREATEDB），
-      #        预建测试库并以运行身份复用(--keepdb)，配套 grant-ci-test.sql 补回
-      #        测试 fixture 需要的 django_migrations 读权与 tenants 写权。
-      # ---------------------------------------------------------------------------
-      - name: Create CI runtime identity + dedicated test database
-        working-directory: ${{ env.APP_DIR }}
-        env:
-          DB_NAME: postgres
-        run: |
-          uv run python - <<'PY'
-          import os, psycopg, pathlib
-          host, port, pw = os.environ["DB_HOST"], os.environ["DB_PORT"], os.environ["DB_PASSWORD"]
-          dsn = f"host={host} port={port} user={os.environ['DB_USER']} password={pw} dbname=postgres"
-          with psycopg.connect(dsn, autocommit=True) as admin:
-              admin.execute(
-                  "DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='inventory_runtime') "
-                  "THEN CREATE ROLE inventory_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE "
-                  "NOREPLICATION NOBYPASSRLS; END IF; END $$;"
-              )
-              admin.execute(
-                  "DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='inventory_ci') "
-                  "THEN CREATE ROLE inventory_ci LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE "
-                  "NOREPLICATION NOBYPASSRLS PASSWORD 'ci-only'; END IF; END $$;"
-              )
-              admin.execute("GRANT inventory_runtime TO inventory_ci")
-              if not admin.execute(
-                  "SELECT 1 FROM pg_database WHERE datname='test_campus_inventory'"
-              ).fetchone():
-                  admin.execute("CREATE DATABASE test_campus_inventory TEMPLATE campus_inventory")
-          test_dsn = f"host={host} port={port} user={os.environ['DB_USER']} password={pw} dbname=test_campus_inventory"
-          for fn in ("sql/grant-runtime.sql", "sql/grant-ci-test.sql"):
-              sql = pathlib.Path(fn).read_text()
-              with psycopg.connect(test_dsn, autocommit=True) as c:
-                  c.execute(sql)
-          print("CI runtime identity + test database ready")
-          PY
-      - name: Run runtime-guarded verification scripts as CI runtime identity
-        working-directory: ${{ env.APP_DIR }}
-        env:
-          DB_NAME: test_campus_inventory
-          DB_USER: inventory_ci
-          DB_PASSWORD: ci-only
-        run: |
-          uv run python scripts/verify_p7.py
-          uv run python scripts/verify_p8a.py
-          uv run python scripts/verify_p8b.py
-          uv run python scripts/verify_p8c.py
-          uv run python scripts/verify_readiness.py
-      - name: Run full Django regression suite as CI runtime identity
-        working-directory: ${{ env.APP_DIR }}
-        env:
-          DB_NAME: test_campus_inventory
-          DB_USER: inventory_ci
-          DB_PASSWORD: ci-only
-          TEST_DB_NAME: test_campus_inventory
-        run: uv run python manage.py test tests --no-input --keepdb
-      - name: Verify suite schema and runtime ACL
+      # Owner/DBA connection on purpose: the suite seeds corruption, checks
+      # migration-identity denials and builds its own test DB, then switches
+      # to the real runtime role in-test via SET LOCAL ROLE inventory_runtime,
+      # so require_runtime() and the runtime ACL are exercised unweakened.
+      # Never grant the runtime role CREATEDB or extra table rights for tests.
+      - name: Run full Django regression suite explicitly
+        run: uv run python manage.py test tests --no-input
         working-directory: ${{ env.APP_DIR }}
         env:
           DB_NAME: campus_inventory
+      - name: Verify suite schema and runtime ACL
         run: |
           uv run python manage.py verify_schema
           uv run python manage.py verify_runtime
+        working-directory: ${{ env.APP_DIR }}
+        env:
+          DB_NAME: campus_inventory
+      - name: Verify readiness with real local dependencies
+        run: uv run python scripts/verify_readiness.py
+        working-directory: ${{ env.APP_DIR }}
       - name: Verify requirements match the frozen lock
         run: |
           uv export --frozen --format requirements-txt --output-file requirements.txt > /dev/null

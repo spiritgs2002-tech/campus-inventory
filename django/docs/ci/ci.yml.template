@@ -104,6 +104,11 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         env:
           DB_NAME: campus_inventory
+      # Owner/DBA connection on purpose: the suite seeds corruption, checks
+      # migration-identity denials and builds its own test DB, then switches
+      # to the real runtime role in-test via SET LOCAL ROLE inventory_runtime,
+      # so require_runtime() and the runtime ACL are exercised unweakened.
+      # Never grant the runtime role CREATEDB or extra table rights for tests.
       - name: Run full Django regression suite explicitly
         run: uv run python manage.py test tests --no-input
         working-directory: ${{ env.APP_DIR }}
