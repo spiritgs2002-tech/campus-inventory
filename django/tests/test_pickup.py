@@ -502,3 +502,61 @@ class PickupTests(OrderFixtureMixin, TestCase):
         )
         with self.assertRaises(BusinessError):
             pickup.pickup_issue(fake, self.item.qr_token, 1, self.admin.pk, uuid4().hex)
+
+    # --- remediation: anonymous switch / caps / quotas ---
+    def test_disabled_school_rejects_anonymous_but_keeps_login_pickup(self):
+        self.receive(4)
+        with override_settings(ANONYMOUS_SCAN_TENANTS=frozenset()):
+            response = self.anonymous()
+            self.assertEqual(response.status_code, 401, response.content)
+            self.assertEqual(
+                response.json()["error"]["code"], "ANONYMOUS_SCAN_DISABLED"
+            )
+            page = self.client.get(f"/s/pickup/{self.item.qr_token}/")
+            self.assertContains(page, "本校未开启免密扫码登记")
+        self.assertFalse(User.objects.filter(username="T-001").exists())
+        with override_settings(ANONYMOUS_SCAN_TENANTS=frozenset({self.tenant.pk})):
+            self.assertEqual(self.anonymous().status_code, 201)
+
+    def test_anonymous_quantity_cap_rejects_before_identity_creation(self):
+        self.receive(10)
+        with override_settings(PICKUP_ANONYMOUS_MAX_QTY=3):
+            response = self.anonymous(quantity="4")
+            self.assertEqual(response.status_code, 422, response.content)
+            self.assertEqual(
+                response.json()["error"]["code"], "ANONYMOUS_QUANTITY_LIMIT"
+            )
+            self.assertFalse(User.objects.filter(username="T-001").exists())
+            self.assertEqual(self.anonymous(quantity="3").status_code, 201)
+
+    def test_per_employee_quota_blocks_one_identity_only(self):
+        self.receive(10)
+        with override_settings(ANONYMOUS_PER_EMPLOYEE_PER_HOUR=2):
+            self.assertEqual(self.anonymous().status_code, 201)
+            self.assertEqual(self.anonymous().status_code, 201)
+            blocked = self.anonymous()
+            self.assertEqual(blocked.status_code, 429)
+            self.assertEqual(
+                blocked.json()["error"]["code"], "ANONYMOUS_EMPLOYEE_RATE_LIMITED"
+            )
+            self.assertEqual(
+                self.anonymous(name="另一教师", employee_no="T-009").status_code, 201
+            )
+
+    def test_new_identity_quota_limits_rotating_employee_numbers(self):
+        self.receive(10)
+        with override_settings(ANONYMOUS_NEW_IDENTITIES_PER_HOUR=2):
+            for no in ("R-1", "R-2"):
+                self.assertEqual(
+                    self.anonymous(name=no, employee_no=no).status_code, 201
+                )
+            blocked = self.anonymous(name="R-3", employee_no="R-3")
+            self.assertEqual(blocked.status_code, 429)
+            self.assertEqual(
+                blocked.json()["error"]["code"], "ANONYMOUS_IDENTITY_RATE_LIMITED"
+            )
+            self.assertFalse(User.objects.filter(username="R-3").exists())
+            # Existing lightweight identities are not new and keep working.
+            self.assertEqual(
+                self.anonymous(name="R-1", employee_no="R-1").status_code, 201
+            )

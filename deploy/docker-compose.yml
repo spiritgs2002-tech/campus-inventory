@@ -52,6 +52,8 @@ services:
       DB_USER: inv_run
       DB_PASSWORD: ${RUN_DB_PASSWORD:?RUN_DB_PASSWORD required}
       REDIS_URL: redis://redis:6379/0
+      # web 仅经 compose 内 nginx 访问，nginx 覆盖 X-Forwarded-Proto。
+      TRUST_X_FORWARDED_PROTO: "true"
     depends_on:
       postgres:
         condition: service_healthy

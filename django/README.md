@@ -195,7 +195,7 @@ CI工作流位于当前实际Git根 inventory-v4/ 的 [`.github/workflows/ci.yml
 | `/attachments/import/`、POST `/api/v1/attachments/import/` | CSV 批量关联，file 最大64KiB、200条；仅 scrap_id、attachment_id 两列，无重复；任一越域、越权或已决策记录则全部回滚。 |
 | GET `/api/v1/attachments/?ids=1,2` | 使用参数化原生 SQL 的批量元数据查询，租户及当前用户权限双过滤，不返回对象键。 |
 
-所有写入继续要求 Idempotency-Key；HTML 自带 CSRF/幂等键。Cookie API 写入必须有 X-CSRFToken，Bearer API 由既有 JWT 认证后放行。批量关联是 P6 的批量导入隔离通路，不代表期初 Excel/5000 行库存导入已经交付。
+所有写入继续要求 Idempotency-Key；HTML 自带 CSRF/幂等键。Cookie API 写入必须有 X-CSRFToken，Bearer API 由既有 JWT 认证后放行。批量关联是 P6 的批量导入隔离通路；期初库存导入另见下文“整改增补”（CSV，单文件最多1000行）。
 
 上传在 Django 临时文件处理器之前限流至文件大小上限；文件后缀、MIME、内容解析、图片像素上限和静态 PDF 策略共同验证。服务保留原始字节，不保存客户端文件名。静态 PDF 最多200页，拒绝加密、脚本/嵌入文件等活动内容；这属于内容格式校验，不是病毒扫描。
 
@@ -252,3 +252,11 @@ uv run celery -A campus_inventory beat --loglevel=INFO --schedule /private/ops/i
 ## P8c 通用报修
 
 当前schema为30表/14函数/32触发器、共10条迁移；上文各阶段计数为对应历史范围。报修登记、本人查询及管理员派单/进度已接线，详见 [P8c操作与复验说明](../docs/使用说明/P8c操作与复验说明.md)。专项闸门为 `python scripts/verify_p8c.py`；免密支持文字报修，照片须登录并复用既有附件服务；工单不自动改变资产状态。
+
+## 整改增补（2026-11）
+
+- **扫码免密开关与限额**：`ANONYMOUS_SCAN_TENANTS`（`*` 全部学校开启，为兼容默认值；空值关闭；`1,2` 仅列出的租户开启）同时控制免密领用、请购、报修。关闭后扫码页提示登录，登录用户不受影响。`PICKUP_ANONYMOUS_MAX_QTY`（默认20）限制免密领用单次耗材数量；`ANONYMOUS_PER_EMPLOYEE_PER_HOUR`（默认10）限制同一工号每类免密操作每小时次数；`ANONYMOUS_NEW_IDENTITIES_PER_HOUR`（默认30）限制每校每小时新登记的免密工号；`PICKUP_ANONYMOUS_PER_MINUTE` 现按“每校每类免密操作”计数，请购与报修同样适用。计数只统计已完成的操作，同键重放不计数；管理员 `import_repairs` 导入不受新工号限额约束。
+- **免密申请人的通知**：免密工号无法登录，管理员请购列表会标注“无法登录查收站内通知”。管理员在用户管理中为该工号设置初始密码后，该工号即成为正式账号（首登强制改密），可查看此前的到货/驳回通知。
+- **反向代理信任**：`SECURE_PROXY_SSL_HEADER` 仅在 `TRUST_X_FORWARDED_PROTO=true` 时开启（默认关闭）。compose 已为 web 固定开启；systemd/云上部署须在环境文件中设置（`deploy/env.production.template` 已含该项）。**升级旧部署时务必补上此变量**，否则 nginx/CLB 后会出现 HTTPS 跳转死循环。
+- **CSV 导出**（仅管理员）：`/stock/export.csv`、`/stock/ledger/export.csv`、`/assets/export.csv`，沿用列表页同名筛选参数（忽略 page），UTF-8 BOM 以便 Excel 打开，单次最多50000行，公式前缀单元格自动转义；列表页提供“按当前筛选导出 CSV”链接。导出记录写入应用日志。
+- **期初库存导入**（仅管理员）：`/inbound/import/` 上传 CSV（列：物资编码、库位、数量，可选质量、单价；UTF-8 或 GBK；最多1000行、1MiB），先“预检”（完整执行入库校验后回滚），再“正式导入”。每50行生成一张 `opening` 入库单，整份文件同一事务，任一失败全部回滚；同一文件换幂等键再次导入会被拒绝。跨文件的同一物资/库位/质量不做去重，拆分文件时须自行避免重复。

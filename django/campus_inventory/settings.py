@@ -131,9 +131,7 @@ SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Strict"
 SECURE_SSL_REDIRECT = not DEBUG
-# 部署在反向代理（nginx）后，信任 X-Forwarded-Proto，避免 301 重定向死循环。
-# 仅当确有可信代理前置时才启用；单独暴露应用时切勿开启。
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# 反向代理信任由 TRUST_X_FORWARDED_PROTO 显式开启，见下方配置。
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
@@ -204,6 +202,49 @@ except ValueError:
     raise ImproperlyConfigured("PICKUP_ANONYMOUS_PER_MINUTE must be 1-10000") from None
 if not 1 <= PICKUP_ANONYMOUS_PER_MINUTE <= 10000:
     raise ImproperlyConfigured("PICKUP_ANONYMOUS_PER_MINUTE must be 1-10000")
+# Anonymous QR flows (pickup / repair / requisition) with self-declared identity.
+# "*" = all tenants, "" or "none" = disabled, "1,2" = tenant ID allowlist.
+_anon_tenants = os.environ.get("ANONYMOUS_SCAN_TENANTS", "*").strip()
+if _anon_tenants == "*":
+    ANONYMOUS_SCAN_TENANTS = "*"
+elif _anon_tenants.lower() in {"", "none"}:
+    ANONYMOUS_SCAN_TENANTS = frozenset()
+else:
+    try:
+        ANONYMOUS_SCAN_TENANTS = frozenset(
+            int(part) for part in _anon_tenants.split(",") if part.strip()
+        )
+        if any(not 0 < tid < 2**63 for tid in ANONYMOUS_SCAN_TENANTS):
+            raise ValueError()
+    except ValueError:
+        raise ImproperlyConfigured(
+            'ANONYMOUS_SCAN_TENANTS must be "*", empty/none, or tenant IDs'
+        ) from None
+
+
+def _bounded_int(name, default, low, high):
+    try:
+        value = int(os.environ.get(name, str(default)))
+    except ValueError:
+        raise ImproperlyConfigured(f"{name} must be {low}-{high}") from None
+    if not low <= value <= high:
+        raise ImproperlyConfigured(f"{name} must be {low}-{high}")
+    return value
+
+
+# Per-request cap for an unverified consumable pickup (fixed assets are always 1).
+PICKUP_ANONYMOUS_MAX_QTY = _bounded_int("PICKUP_ANONYMOUS_MAX_QTY", 20, 1, 1000000)
+# Per employee number, per anonymous operation, rolling hour.
+ANONYMOUS_PER_EMPLOYEE_PER_HOUR = _bounded_int(
+    "ANONYMOUS_PER_EMPLOYEE_PER_HOUR", 10, 1, 10000
+)
+# New unverified identities a school may register per rolling hour.
+ANONYMOUS_NEW_IDENTITIES_PER_HOUR = _bounded_int(
+    "ANONYMOUS_NEW_IDENTITIES_PER_HOUR", 30, 1, 100000
+)
+# Behind a trusted reverse proxy only; never enable when the app is exposed directly.
+if os.environ.get("TRUST_X_FORWARDED_PROTO", "false").lower() == "true":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # One beat instance per deployment; overlapping deliveries remain idempotent.
 _test_interval = os.environ.get("MAINTENANCE_TEST_INTERVAL_SECONDS")
 if _test_interval and (not DEBUG or not 1 <= int(_test_interval) <= 60):

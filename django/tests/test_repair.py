@@ -557,3 +557,28 @@ class RepairTests(OrderFixtureMixin, TestCase):
         response = self.request("get", f"/s/repairs/{row['id']}/", user=self.user)
         self.assertContains(response, "&lt;script&gt;")
         self.assertNotContains(response, '<script>alert("x")</script>')
+
+    # --- remediation: anonymous switch / caps / quotas ---
+    def test_anonymous_repair_switch_and_employee_quota(self):
+        with override_settings(ANONYMOUS_SCAN_TENANTS=frozenset()):
+            with self.assertRaises(BusinessError) as caught:
+                services.repair_submit(None, self.anon(), uuid4().hex)
+            self.assertEqual(caught.exception.code, "ANONYMOUS_SCAN_DISABLED")
+        self.assertFalse(User.objects.filter(username="REPAIR-01").exists())
+        with override_settings(ANONYMOUS_PER_EMPLOYEE_PER_HOUR=1):
+            services.repair_submit(None, self.anon(), uuid4().hex)
+            with self.assertRaises(BusinessError) as caught:
+                services.repair_submit(None, self.anon(), uuid4().hex)
+            self.assertEqual(caught.exception.code, "ANONYMOUS_EMPLOYEE_RATE_LIMITED")
+        self.assertEqual(
+            RepairTicket.objects.filter(reporter_no="REPAIR-01").count(), 1
+        )
+
+    def test_anonymous_repair_school_wide_quota(self):
+        with override_settings(PICKUP_ANONYMOUS_PER_MINUTE=1):
+            services.repair_submit(None, self.anon(), uuid4().hex)
+            with self.assertRaises(BusinessError) as caught:
+                services.repair_submit(
+                    None, self.anon(employee_no="REPAIR-02"), uuid4().hex
+                )
+            self.assertEqual(caught.exception.code, "PICKUP_RATE_LIMITED")

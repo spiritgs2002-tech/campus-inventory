@@ -308,8 +308,12 @@ class Command(BaseCommand):
                             seen[data["reporter_no"]] = data["reporter_name"]
                             stats.preview += 1
                             continue
+                        # Administrator-run import: not subject to anonymous quotas.
                         p = ensure_lightweight_user(
-                            tenant.pk, data["reporter_name"], data["reporter_no"]
+                            tenant.pk,
+                            data["reporter_name"],
+                            data["reporter_no"],
+                            limit_new=False,
                         )
                         ticket = RepairTicket.objects.create(
                             tenant_id=tenant.pk,

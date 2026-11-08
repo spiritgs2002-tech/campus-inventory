@@ -105,7 +105,7 @@ MAINTENANCE_ENABLED=true MAINTENANCE_ACTORS_JSON='{"1":2}' uv run celery -A camp
 
 ## 10. 备份与恢复
 - PostgreSQL：每日 `pg_dump`（逻辑）或物理备份；保留策略与证据保留期对齐
-- 证据对象：若启用清理，桶需版本/Object Lock 策略（**未启用版本控制的桶拒绝自动清理**）
+- 证据对象：若启用自动清理，桶必须**从未启用版本控制**（`apps/attachments/storage.py` 对 `Enabled`/`Suspended` 均拒绝清理，因为版本桶中的简单 DELETE 不等于物理删除）；对象备份使用跨桶复制或离线同步。确需版本桶/Object Lock 时须单独设计并另行验收。
 - `apply_schema` 不自动备份；DDL 失败且 grant/记账已提交时，由 DBA 恢复备份或重建空库
 
 ## 11. 推荐加固补丁（可选但建议，上线前套用）

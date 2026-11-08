@@ -206,3 +206,78 @@ class RequisitionTests(OrderFixtureMixin, TestCase):
         self.fulfill(self.approved())
         with connection.cursor() as cursor:
             self.assertTrue(collect(cursor, 20)["ok"])
+
+    # --- remediation: anonymous switch / caps / quotas ---
+    def anon_data(self, no="ANON"):
+        generate_item_tokens(self.principal(), uuid4().hex)
+        self.item.refresh_from_db()
+        return {
+            "item_id": self.item.pk,
+            "qty": "1",
+            "reason": "教学",
+            "name": "匿名教师",
+            "employee_no": no,
+            "token": self.item.qr_token,
+        }
+
+    def test_anonymous_requisition_switch_and_quota(self):
+        from django.test import override_settings
+
+        data = self.anon_data()
+        with override_settings(ANONYMOUS_SCAN_TENANTS=frozenset()):
+            with self.assertRaises(BusinessError) as caught:
+                services.requisition_submit(None, data, uuid4().hex)
+            self.assertEqual(caught.exception.code, "ANONYMOUS_SCAN_DISABLED")
+        with override_settings(ANONYMOUS_PER_EMPLOYEE_PER_HOUR=1):
+            services.requisition_submit(None, data, uuid4().hex)
+            with self.assertRaises(BusinessError) as caught:
+                services.requisition_submit(None, data, uuid4().hex)
+            self.assertEqual(caught.exception.code, "ANONYMOUS_EMPLOYEE_RATE_LIMITED")
+
+    def test_unverified_applicant_flagged_and_recoverable_by_admin_password(self):
+        from apps.core import auth_service, services as core
+        from apps.notifications import services as notifications
+
+        result, _ = services.requisition_submit(
+            None, self.anon_data("ANON-N"), uuid4().hex
+        )
+        pk = result["document"]["id"]
+        services.decide(self.principal(), pk, "approve", uuid4().hex)
+        self.fulfill(pk)
+        anon = User.objects.get(tenant_id=self.tenant.pk, username="ANON-N")
+        page = self.request("get", "/manage/requisitions/")
+        self.assertContains(page, "无法登录查收站内通知")
+        core.save(
+            self.principal(),
+            "users",
+            anon.pk,
+            uuid4().hex,
+            {
+                "username": anon.username,
+                "name": anon.name,
+                "role": "user",
+                "dept_id": "",
+                "active": True,
+                "password": "Initial-Password-123",
+            },
+        )
+        login, _, claims = auth_service.login(
+            self.tenant.code, "ANON-N", "Initial-Password-123", uuid4().hex
+        )
+        self.assertTrue(login["force_change_password"])
+        auth_service.change_password(
+            claims, "Initial-Password-123", "Changed-Password-456", uuid4().hex
+        )
+        login, _, claims = auth_service.login(
+            self.tenant.code, "ANON-N", "Changed-Password-456", uuid4().hex
+        )
+        self.assertEqual(
+            list(
+                notifications.owned(authorize_claims(claims)).values_list(
+                    "type", flat=True
+                )
+            ),
+            ["requisition_arrived"],
+        )
+        page = self.request("get", "/manage/requisitions/")
+        self.assertNotContains(page, "无法登录查收站内通知")
