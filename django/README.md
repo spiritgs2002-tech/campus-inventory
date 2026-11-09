@@ -257,6 +257,6 @@ uv run celery -A campus_inventory beat --loglevel=INFO --schedule /private/ops/i
 
 - **扫码免密开关与限额**：`ANONYMOUS_SCAN_TENANTS`（`*` 全部学校开启，为兼容默认值；空值关闭；`1,2` 仅列出的租户开启）同时控制免密领用、请购、报修。关闭后扫码页提示登录，登录用户不受影响。`PICKUP_ANONYMOUS_MAX_QTY`（默认20）限制免密领用单次耗材数量；`ANONYMOUS_PER_EMPLOYEE_PER_HOUR`（默认10）限制同一工号每类免密操作每小时次数；`ANONYMOUS_NEW_IDENTITIES_PER_HOUR`（默认30）限制每校每小时新登记的免密工号；`PICKUP_ANONYMOUS_PER_MINUTE` 现按“每校每类免密操作”计数，请购与报修同样适用。计数只统计已完成的操作，同键重放不计数；管理员 `import_repairs` 导入不受新工号限额约束。
 - **免密申请人的通知**：免密工号无法登录，管理员请购列表会标注“无法登录查收站内通知”。管理员在用户管理中为该工号设置初始密码后，该工号即成为正式账号（首登强制改密），可查看此前的到货/驳回通知。
-- **反向代理信任**：`SECURE_PROXY_SSL_HEADER` 仅在 `TRUST_X_FORWARDED_PROTO=true` 时开启（默认关闭）。compose 已为 web 固定开启；systemd/云上部署须在环境文件中设置（`deploy/env.production.template` 已含该项）。**升级旧部署时务必补上此变量**，否则 nginx/CLB 后会出现 HTTPS 跳转死循环。
+- **反向代理信任**：`SECURE_PROXY_SSL_HEADER` 仅在 `TRUST_X_FORWARDED_PROTO=true` 时开启（默认关闭）。compose 已为 web 固定开启；systemd/云上部署须在环境文件中设置（`deploy/env.production.template` 已含该项）。**升级旧部署时务必补上此变量**，否则 nginx/CLB 后会出现 HTTPS 跳转死循环。生产模式（DEBUG=false）下该变量完全未设置时，`manage.py check`、`apply_schema` 等命令会输出警告 `campus.W001` 作为提醒（不阻断启动）。
 - **CSV 导出**（仅管理员）：`/stock/export.csv`、`/stock/ledger/export.csv`、`/assets/export.csv`，沿用列表页同名筛选参数（忽略 page），UTF-8 BOM 以便 Excel 打开，单次最多50000行，公式前缀单元格自动转义；列表页提供“按当前筛选导出 CSV”链接。导出记录写入应用日志。
 - **期初库存导入**（仅管理员）：`/inbound/import/` 上传 CSV（列：物资编码、库位、数量，可选质量、单价；UTF-8 或 GBK；最多1000行、1MiB），先“预检”（完整执行入库校验后回滚），再“正式导入”。每50行生成一张 `opening` 入库单，整份文件同一事务，任一失败全部回滚；同一文件换幂等键再次导入会被拒绝。跨文件的同一物资/库位/质量不做去重，拆分文件时须自行避免重复。

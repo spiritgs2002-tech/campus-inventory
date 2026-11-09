@@ -27,3 +27,6 @@ uploads/
 # Local audit artifacts, retained outside delivery
 **/_codex_raw_logs(备查)/
 **/_django_codex_logs(备查)/
+
+# verify_p8a.py 本地复验生成的制品（可用 P8A_ARTIFACT_DIR 改到别处），不随代码提交
+docs/过程记录/P8a/复验制品/
